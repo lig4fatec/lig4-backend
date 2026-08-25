@@ -1,0 +1,21 @@
+#!/bin/sh
+
+primeira_linha=$(head -n 1 "$1")
+
+case "$primeira_linha" in
+    "Merge "*|"Revert "*|fixup!*|squash!*)
+        exit 0
+        ;;
+esac
+
+if printf '%s\n' "$primeira_linha" | grep -Eq '^PRD-[0-9]{4}: .+'; then
+    exit 0
+fi
+
+echo "ERRO: mensagem de commit fora do padrão." >&2
+echo "" >&2
+echo "Formato esperado: PRD-XXXX: descrição curta do que foi feito" >&2
+echo "Exemplo: PRD-0003: adiciona endpoint de login" >&2
+echo "" >&2
+echo "Consulte CONTRIBUTING.md e docs/prd/." >&2
+exit 1
