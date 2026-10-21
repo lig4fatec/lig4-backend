@@ -21,3 +21,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0001](0001-estrutura-de-documentacao-e-padronizacao-de-commits.md) | Estrutura de documentação e padronização de commits | Implementado |
 | [0002](0002-migracao-para-spring-boot-e-motor-de-regras.md) | Migração para Spring Boot e motor de regras do jogo | Proposta |
 | [0003](0003-persistencia-de-jogadas.md) | Persistência e registro das jogadas | Proposta |
+| [0004](0004-estado-da-partida.md) | Consulta do estado da partida | Proposta |

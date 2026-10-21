@@ -7,6 +7,7 @@ import br.com.lig4.domain.StatusPartida;
 import br.com.lig4.dto.JogadaHistoricoDTO;
 import br.com.lig4.dto.JogadaRequestDTO;
 import br.com.lig4.dto.JogadaResponseDTO;
+import br.com.lig4.dto.PartidaEstadoDTO;
 import br.com.lig4.engine.Disco;
 import br.com.lig4.engine.Jogada;
 import br.com.lig4.engine.JogadaInvalidaException;
@@ -117,5 +118,33 @@ public class JogadaService {
 
     private Long jogadorDe(Partida partida, Disco disco) {
         return disco == Disco.VERMELHO ? partida.jogadorUm.id : partida.jogadorDois.id;
+    }
+
+        @Transactional(readOnly = true)
+    public PartidaEstadoDTO estado(Long partidaId) {
+        Partida partida = partidaRepository.findById(partidaId)
+                .orElseThrow(() -> new PartidaNotFoundException(partidaId));
+
+        List<JogadaRegistro> jogadas = jogadaRepository.findByPartidaIdOrderByNumeroAsc(partidaId);
+        Jogo jogo = new Jogo(Disco.VERMELHO);
+        for (JogadaRegistro j : jogadas) {
+            jogo.jogar(discoDe(partida, j.jogador.id), j.coluna);
+        }
+
+        Long vencedorId = jogo.getStatus() == StatusJogo.VENCEDOR
+                ? jogadorDe(partida, jogo.getVencedor())
+                : null;
+        Long proximoJogadorId = jogo.getStatus() == StatusJogo.EM_ANDAMENTO
+                ? jogadorDe(partida, jogo.getTurno())
+                : null;
+
+        return new PartidaEstadoDTO(
+                partida.id,
+                partida.status,
+                jogo.getStatus(),
+                vencedorId,
+                proximoJogadorId,
+                jogadas.size(),
+                jogo.getTabuleiro().comoMatriz());
     }
 }
