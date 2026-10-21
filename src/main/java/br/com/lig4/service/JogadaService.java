@@ -21,6 +21,7 @@ import br.com.lig4.repository.JogadorRepository;
 import br.com.lig4.repository.PartidaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import br.com.lig4.dto.JogadorResumoDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -138,8 +139,10 @@ public class JogadaService {
                 ? jogadorDe(partida, jogo.getTurno())
                 : null;
 
-        return new PartidaEstadoDTO(
+                return new PartidaEstadoDTO(
                 partida.id,
+                JogadorResumoDTO.from(partida.jogadorUm),
+                JogadorResumoDTO.from(partida.jogadorDois),
                 partida.status,
                 jogo.getStatus(),
                 vencedorId,

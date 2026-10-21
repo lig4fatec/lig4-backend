@@ -5,6 +5,8 @@ import br.com.lig4.engine.StatusJogo;
 
 public record PartidaEstadoDTO(
         Long partidaId,
+        JogadorResumoDTO jogadorUm,
+        JogadorResumoDTO jogadorDois,
         StatusPartida statusPartida,
         StatusJogo resultado,
         Long vencedorId,
@@ -12,4 +14,4 @@ public record PartidaEstadoDTO(
         int totalJogadas,
         String[][] tabuleiro
 ) {
-} 
+}
