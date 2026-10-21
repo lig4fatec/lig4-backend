@@ -30,3 +30,4 @@ ADRs (Architecture Decision Records) documentam decisões importantes sobre a ar
 |---|---|---|
 | [0001](0001-estrutura-de-documentacao-e-uso-de-ia.md) | Estrutura de documentação e uso de IA | Aceita |
 | [0002](0002-padronizacao-de-commits-com-rastreio-por-prd.md) | Padronização de commits com rastreio por PRD | Aceita |
+| [0003](0003-adocao-de-spring-boot-como-framework-do-back-end.md) | Adoção de Spring Boot como framework do back-end | Proposta |

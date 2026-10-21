@@ -6,26 +6,30 @@ import br.com.lig4.dto.JogadorResponseDTO;
 import br.com.lig4.exception.EmailJaCadastradoException;
 import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.repository.JogadorRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@ApplicationScoped
+@Service
 public class JogadorService {
 
-    @Inject
-    JogadorRepository repository;
+    private final JogadorRepository repository;
 
+    public JogadorService(JogadorRepository repository) {
+        this.repository = repository;
+    }
+
+    @Transactional(readOnly = true)
     public List<JogadorResponseDTO> listarTodos() {
-        return repository.listAll().stream()
+        return repository.findAll().stream()
                 .map(JogadorResponseDTO::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public JogadorResponseDTO buscarPorId(Long id) {
-        Jogador jogador = repository.findByIdOptional(id)
+        Jogador jogador = repository.findById(id)
                 .orElseThrow(() -> new JogadorNotFoundException(id));
         return JogadorResponseDTO.from(jogador);
     }
@@ -39,14 +43,14 @@ public class JogadorService {
         Jogador jogador = new Jogador();
         jogador.nome = dto.nome();
         jogador.email = dto.email();
-        repository.persist(jogador);
+        repository.save(jogador);
 
         return JogadorResponseDTO.from(jogador);
     }
 
     @Transactional
     public JogadorResponseDTO atualizar(Long id, JogadorRequestDTO dto) {
-        Jogador jogador = repository.findByIdOptional(id)
+        Jogador jogador = repository.findById(id)
                 .orElseThrow(() -> new JogadorNotFoundException(id));
 
         repository.findByEmail(dto.email())
@@ -63,9 +67,9 @@ public class JogadorService {
 
     @Transactional
     public void remover(Long id) {
-        boolean deletado = repository.deleteById(id);
-        if (!deletado) {
+        if (!repository.existsById(id)) {
             throw new JogadorNotFoundException(id);
         }
+        repository.deleteById(id);
     }
 }
