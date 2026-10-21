@@ -147,4 +147,11 @@ public class JogadaService {
                 jogadas.size(),
                 jogo.getTabuleiro().comoMatriz());
     }
+
+    @Transactional(readOnly = true)
+    public void validarParticipante(Long partidaId, Long jogadorId) {
+        Partida partida = partidaRepository.findById(partidaId)
+                .orElseThrow(() -> new PartidaNotFoundException(partidaId));
+        discoDe(partida, jogadorId);
+    }
 }
