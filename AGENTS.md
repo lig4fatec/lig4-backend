@@ -4,7 +4,7 @@ Ponto de entrada para **agentes de IA** (e para humanos que queiram entender com
 
 ## Sobre o projeto
 
-Backend do projeto LIG 4. O repositório está em fase inicial: **ainda não há stack tecnológica definida**. Não presuma linguagens, frameworks, bibliotecas ou ferramentas — se algo não estiver documentado, trate como indefinido e sinalize.
+Backend do projeto LIG 4, em Java 25 com Spring Boot (ver [ADR 0003](docs/adr/0003-adocao-de-spring-boot-como-framework-do-back-end.md)). Se algo não estiver documentado, trate como indefinido e sinalize.
 
 ## Como um agente de IA deve trabalhar neste repositório
 
