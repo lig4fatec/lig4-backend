@@ -2,7 +2,7 @@
 
 Backend do projeto LIG 4.
 
-> **Status:** projeto em fase inicial. A stack tecnológica ainda será definida — acompanhe as decisões nos [ADRs](docs/adr/).
+> **Status:** projeto em desenvolvimento. Back-end em Java 25 com Spring Boot, conforme o [ADR 0003](docs/adr/0003-adocao-de-spring-boot-como-framework-do-back-end.md).
 
 ## Documentação
 

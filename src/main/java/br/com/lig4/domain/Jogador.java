@@ -1,6 +1,5 @@
 package br.com.lig4.domain;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -13,7 +12,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "jogador")
-public class Jogador extends PanacheEntityBase {
+public class Jogador {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
