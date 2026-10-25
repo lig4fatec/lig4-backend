@@ -11,28 +11,31 @@ import br.com.lig4.exception.PartidaInvalidaException;
 import br.com.lig4.exception.PartidaNotFoundException;
 import br.com.lig4.repository.JogadorRepository;
 import br.com.lig4.repository.PartidaRepository;
-import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 
-@ApplicationScoped
+@Service
 public class PartidaService {
 
-    @Inject
-    PartidaRepository partidaRepository;
+    private final PartidaRepository partidaRepository;
+    private final JogadorRepository jogadorRepository;
 
-    @Inject
-    JogadorRepository jogadorRepository;
+    public PartidaService(PartidaRepository partidaRepository, JogadorRepository jogadorRepository) {
+        this.partidaRepository = partidaRepository;
+        this.jogadorRepository = jogadorRepository;
+    }
 
+    @Transactional(readOnly = true)
     public List<PartidaResponseDTO> listarTodas() {
-        return partidaRepository.listAll().stream()
+        return partidaRepository.findAll().stream()
                 .map(PartidaResponseDTO::from)
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public PartidaResponseDTO buscarPorId(Long id) {
         return PartidaResponseDTO.from(buscarOuFalhar(id));
     }
@@ -50,7 +53,7 @@ public class PartidaService {
         partida.jogadorUm = jogadorUm;
         partida.jogadorDois = jogadorDois;
         partida.status = StatusPartida.EM_ANDAMENTO;
-        partidaRepository.persist(partida);
+        partidaRepository.save(partida);
 
         return PartidaResponseDTO.from(partida);
     }
@@ -63,7 +66,7 @@ public class PartidaService {
             throw new PartidaInvalidaException("Esta partida já está finalizada");
         }
 
-        if (dto.vencedorId() != null) {
+        if (dto != null && dto.vencedorId() != null) {
             boolean vencedorValido = dto.vencedorId().equals(partida.jogadorUm.id)
                     || dto.vencedorId().equals(partida.jogadorDois.id);
             if (!vencedorValido) {
@@ -80,19 +83,19 @@ public class PartidaService {
 
     @Transactional
     public void remover(Long id) {
-        boolean deletado = partidaRepository.deleteById(id);
-        if (!deletado) {
+        if (!partidaRepository.existsById(id)) {
             throw new PartidaNotFoundException(id);
         }
+        partidaRepository.deleteById(id);
     }
 
     private Partida buscarOuFalhar(Long id) {
-        return partidaRepository.findByIdOptional(id)
+        return partidaRepository.findById(id)
                 .orElseThrow(() -> new PartidaNotFoundException(id));
     }
 
     private Jogador buscarJogadorOuFalhar(Long id) {
-        return jogadorRepository.findByIdOptional(id)
+        return jogadorRepository.findById(id)
                 .orElseThrow(() -> new JogadorNotFoundException(id));
     }
 }
