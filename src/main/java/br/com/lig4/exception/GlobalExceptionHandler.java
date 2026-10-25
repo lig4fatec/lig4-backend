@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import br.com.lig4.engine.JogadaInvalidaException;
 
 import java.util.stream.Collectors;
 
@@ -33,5 +34,14 @@ public class GlobalExceptionHandler {
                 .map(erro -> erro.getDefaultMessage())
                 .collect(Collectors.joining("; "));
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErroResponse(mensagem));
+    }
+
+    @ExceptionHandler(JogadaInvalidaException.class)
+    public ResponseEntity<ErroResponse> jogadaInvalida(JogadaInvalidaException e) {
+        HttpStatus status = switch (e.getMotivo()) {
+            case JOGO_ENCERRADO, FORA_DO_TURNO -> HttpStatus.CONFLICT;
+            case COLUNA_INVALIDA, COLUNA_CHEIA -> HttpStatus.BAD_REQUEST;
+        };
+        return ResponseEntity.status(status).body(new ErroResponse(e.getMessage()));
     }
 }
