@@ -36,15 +36,18 @@ public class JogadaService {
     private final JogadorRepository jogadorRepository;
     private final JogadaRegistroRepository jogadaRepository;
     private final SalaRepository salaRepository;
+    private final RecompensaService recompensas;
 
     public JogadaService(PartidaRepository partidaRepository,
                          JogadorRepository jogadorRepository,
                          JogadaRegistroRepository jogadaRepository,
-                         SalaRepository salaRepository) {
+                         SalaRepository salaRepository,
+                         RecompensaService recompensas) {
         this.partidaRepository = partidaRepository;
         this.jogadorRepository = jogadorRepository;
         this.jogadaRepository = jogadaRepository;
         this.salaRepository = salaRepository;
+        this.recompensas = recompensas;
     }
 
     @Transactional
@@ -89,6 +92,8 @@ public class JogadaService {
                 partida.vencedor = jogador;
                 vencedorId = jogador.id;
             }
+            // moedas de vitória, derrota ou empate (a partida só termina uma vez)
+            recompensas.conceder(partida);
             // a sala de origem também termina, e o front percebe ao consultá-la
             salaRepository.findByPartidaId(partidaId).ifPresent(sala -> sala.fase = FaseSala.ENCERRADA);
         }
@@ -175,10 +180,10 @@ public class JogadaService {
     }
 
     private JogadorResumoDTO resumoDe(Jogador jogador, Sala sala) {
-    if (sala == null) {
-        return JogadorResumoDTO.from(jogador);
-    }
-    String cor = jogador.id.equals(sala.dono.id) ? sala.corDono : sala.corConvidado;
-    return new JogadorResumoDTO(jogador.id, jogador.nome, cor);
+        if (sala == null) {
+            return JogadorResumoDTO.from(jogador);
+        }
+        String cor = jogador.id.equals(sala.dono.id) ? sala.corDono : sala.corConvidado;
+        return new JogadorResumoDTO(jogador.id, jogador.nome, cor);
     }
 }
