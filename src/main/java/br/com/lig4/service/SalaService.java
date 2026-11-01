@@ -120,7 +120,7 @@ public class SalaService {
         return SalaResponseDTO.from(sala);
     }
 
-    /** Só o dono inicia, e só com o convidado na sala. O dono joga como jogador 1 e começa. */
+    /** Só o dono inicia, e só com o convidado na sala. A primeira partida começa pelo dono. */
     @Transactional
     public SalaResponseDTO iniciar(String pin, SalaAcaoRequestDTO dto) {
         Sala sala = buscarComLock(pin);
@@ -132,20 +132,47 @@ public class SalaService {
             throw new SalaInvalidaException(CodigoErro.SEM_CONVIDADO, "Aguarde o segundo jogador entrar na sala");
         }
 
-        Partida partida = new Partida();
-        partida.jogadorUm = sala.dono;
-        partida.jogadorDois = sala.convidado;
-        partida.status = StatusPartida.EM_ANDAMENTO;
-        partidaRepository.save(partida);
-
-        sala.partida = partida;
+        sala.partida = novaPartida(sala.dono, sala.convidado);
         sala.fase = FaseSala.JOGANDO;
         return SalaResponseDTO.from(sala);
     }
 
     /**
+     * Pede a revanche. Quando os dois pedem, começa uma nova partida com os mesmos jogadores,
+     * e quem começou a anterior passa a jogar em segundo.
+     */
+    @Transactional
+    public SalaResponseDTO revanche(String pin, SalaAcaoRequestDTO dto) {
+        Sala sala = buscarComLock(pin);
+        boolean dono = ehDono(sala, dto.jogadorId());
+        if (!dono && !ehConvidado(sala, dto.jogadorId())) {
+            throw new SalaInvalidaException(CodigoErro.SEM_PERMISSAO, "Este jogador não está na sala");
+        }
+        if (sala.fase != FaseSala.ENCERRADA || sala.partida == null
+                || sala.partida.status != StatusPartida.FINALIZADA) {
+            throw new SalaInvalidaException(CodigoErro.FASE_INVALIDA,
+                    "A revanche só pode ser pedida depois que a partida termina");
+        }
+
+        if (dono) {
+            sala.revancheDono = true;
+        } else {
+            sala.revancheConvidado = true;
+        }
+
+        if (sala.revancheDono && sala.revancheConvidado) {
+            Partida anterior = sala.partida;
+            sala.partida = novaPartida(anterior.jogadorDois, anterior.jogadorUm);
+            sala.fase = FaseSala.JOGANDO;
+            sala.revancheDono = false;
+            sala.revancheConvidado = false;
+        }
+        return SalaResponseDTO.from(sala);
+    }
+
+    /**
      * Sai da sala. No lobby, o convidado libera a vaga e, se o dono sair, a sala deixa de existir.
-     * Com a partida já iniciada, a sala é encerrada.
+     * Com a partida em andamento, a sala é encerrada. Depois do fim da partida, quem sai fecha a sala.
      */
     @Transactional
     public void sair(String pin, SalaAcaoRequestDTO dto) {
@@ -155,16 +182,26 @@ public class SalaService {
             throw new SalaInvalidaException(CodigoErro.SEM_PERMISSAO, "Este jogador não está na sala");
         }
 
-        if (sala.fase == FaseSala.AGUARDANDO) {
-            if (dono) {
-                salaRepository.delete(sala);
-            } else {
-                sala.convidado = null;
-                sala.corConvidado = null;
+        switch (sala.fase) {
+            case AGUARDANDO -> {
+                if (dono) {
+                    salaRepository.delete(sala);
+                } else {
+                    sala.convidado = null;
+                    sala.corConvidado = null;
+                }
             }
-        } else {
-            sala.fase = FaseSala.ENCERRADA;
+            case JOGANDO -> sala.fase = FaseSala.ENCERRADA;
+            case ENCERRADA -> salaRepository.delete(sala);
         }
+    }
+
+    private Partida novaPartida(Jogador primeiro, Jogador segundo) {
+        Partida partida = new Partida();
+        partida.jogadorUm = primeiro;
+        partida.jogadorDois = segundo;
+        partida.status = StatusPartida.EM_ANDAMENTO;
+        return partidaRepository.save(partida);
     }
 
     private Sala buscarComLock(String pin) {

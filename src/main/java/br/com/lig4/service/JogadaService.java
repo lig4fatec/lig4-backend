@@ -133,14 +133,11 @@ public class JogadaService {
                 ? jogadorDe(partida, jogo.getTurno())
                 : null;
 
-        // Na sala, o dono é o jogador 1 (começa) e o convidado é o jogador 2.
+        // Na sala, a cor de cada jogador é a escolhida lá. Quem começa alterna a cada revanche,
+        // então a cor é procurada pelo id do jogador, e não pela posição.
         Sala sala = salaRepository.findByPartidaId(partidaId).orElse(null);
-        JogadorResumoDTO jogadorUm = sala == null
-                ? JogadorResumoDTO.from(partida.jogadorUm)
-                : new JogadorResumoDTO(partida.jogadorUm.id, partida.jogadorUm.nome, sala.corDono);
-        JogadorResumoDTO jogadorDois = sala == null
-                ? JogadorResumoDTO.from(partida.jogadorDois)
-                : new JogadorResumoDTO(partida.jogadorDois.id, partida.jogadorDois.nome, sala.corConvidado);
+        JogadorResumoDTO jogadorUm = resumoDe(partida.jogadorUm, sala);
+        JogadorResumoDTO jogadorDois = resumoDe(partida.jogadorDois, sala);
 
         return new PartidaEstadoDTO(
                 partida.id,
@@ -175,5 +172,13 @@ public class JogadaService {
 
     private Long jogadorDe(Partida partida, Disco disco) {
         return disco == Disco.VERMELHO ? partida.jogadorUm.id : partida.jogadorDois.id;
+    }
+
+    private JogadorResumoDTO resumoDe(Jogador jogador, Sala sala) {
+    if (sala == null) {
+        return JogadorResumoDTO.from(jogador);
+    }
+    String cor = jogador.id.equals(sala.dono.id) ? sala.corDono : sala.corConvidado;
+    return new JogadorResumoDTO(jogador.id, jogador.nome, cor);
     }
 }
