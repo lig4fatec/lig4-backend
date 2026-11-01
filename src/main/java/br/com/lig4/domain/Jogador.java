@@ -18,6 +18,7 @@ public class Jogador {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
 
+    /** Também é o nick do perfil: é o nome que aparece nas partidas. */
     @Column(nullable = false, length = 100)
     public String nome;
 
@@ -38,4 +39,14 @@ public class Jogador {
     /** Hash BCrypt da senha. Nunca sai em nenhuma resposta da API. */
     @Column(name = "senha_hash", length = 100)
     public String senhaHash;
+
+    @Column(name = "nome_completo", length = 100)
+    public String nomeCompleto;
+
+    @Column(length = 280)
+    public String bio;
+
+    /** Saldo da loja. Cresce ao fim de cada partida (ver RecompensaService). */
+    @Column(nullable = false)
+    public int moedas = 500;
 }

@@ -22,10 +22,14 @@ public class PartidaService {
 
     private final PartidaRepository partidaRepository;
     private final JogadorRepository jogadorRepository;
+    private final RecompensaService recompensas;
 
-    public PartidaService(PartidaRepository partidaRepository, JogadorRepository jogadorRepository) {
+    public PartidaService(PartidaRepository partidaRepository,
+                          JogadorRepository jogadorRepository,
+                          RecompensaService recompensas) {
         this.partidaRepository = partidaRepository;
         this.jogadorRepository = jogadorRepository;
+        this.recompensas = recompensas;
     }
 
     @Transactional(readOnly = true)
@@ -77,6 +81,7 @@ public class PartidaService {
 
         partida.status = StatusPartida.FINALIZADA;
         partida.finalizadoEm = Instant.now();
+        recompensas.conceder(partida);
 
         return PartidaResponseDTO.from(partida);
     }
