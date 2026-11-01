@@ -13,6 +13,9 @@ public enum CodigoErro {
     COR_INVALIDA,
     REQUISICAO_INVALIDA,
     ERRO_INTERNO,
+    // login
+    SENHA_INVALIDA,
+    CREDENCIAIS_INVALIDAS,
     // salas
     PIN_INVALIDO,
     PIN_NAO_ENCONTRADO,
@@ -27,7 +30,6 @@ public enum CodigoErro {
     FORA_DO_TURNO,
     COLUNA_INVALIDA,
     COLUNA_CHEIA;
-    
 
     public static CodigoErro de(RuntimeException e) {
         if (e instanceof JogadorNotFoundException) {
@@ -42,6 +44,9 @@ public enum CodigoErro {
         if (e instanceof EmailJaCadastradoException) {
             return EMAIL_JA_CADASTRADO;
         }
+        if (e instanceof CredenciaisInvalidasException) {
+            return CREDENCIAIS_INVALIDAS;
+        }
         if (e instanceof PartidaInvalidaException) {
             return PARTIDA_INVALIDA;
         }
@@ -52,7 +57,5 @@ public enum CodigoErro {
             return valueOf(jogada.getMotivo().name());
         }
         return ERRO_INTERNO;
-
-        
     }
 }

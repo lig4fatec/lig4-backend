@@ -34,4 +34,8 @@ public class Jogador {
 
     @Column(length = 7)
     public String cor;
+
+    /** Hash BCrypt da senha. Nunca sai em nenhuma resposta da API. */
+    @Column(name = "senha_hash", length = 100)
+    public String senhaHash;
 }

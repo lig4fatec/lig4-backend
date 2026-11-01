@@ -29,4 +29,5 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0009](0009-salas-por-pin.md) | Salas por PIN: criar, entrar e consultar | Implementado |
 | [0010](0010-lobby-da-sala.md) | Lobby da sala: trocar cor, iniciar e sair | Implementado |
 | [0011](0011-partida-da-sala.md) | Partida ligada à sala | Implementado |
-| [0012](0012-revanche-com-alternancia.md) | Revanche com alternância de quem começa | Proposta |
+| [0012](0012-revanche-com-alternancia.md) | Revanche com alternância de quem começa | Implementado |
+| [0014](0014-login-essencial.md) | Login essencial: cadastro e entrada com senha | Implementado |
