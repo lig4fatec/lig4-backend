@@ -54,6 +54,11 @@ public class SalaController {
         return service.iniciar(pin, dto);
     }
 
+    @PostMapping("/{pin}/revanche")
+    public SalaResponseDTO revanche(@PathVariable String pin, @Valid @RequestBody SalaAcaoRequestDTO dto) {
+        return service.revanche(pin, dto);
+    }
+
     @PostMapping("/{pin}/sair")
     public ResponseEntity<Void> sair(@PathVariable String pin, @Valid @RequestBody SalaAcaoRequestDTO dto) {
         service.sair(pin, dto);

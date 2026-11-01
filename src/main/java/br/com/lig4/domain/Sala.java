@@ -46,9 +46,16 @@ public class Sala {
     @Column(name = "cor_convidado", length = 20)
     public String corConvidado;
 
+    /** A partida em andamento ou a última que terminou. */
     @ManyToOne
     @JoinColumn(name = "partida_id")
     public Partida partida;
+
+    @Column(name = "revanche_dono", nullable = false)
+    public boolean revancheDono;
+
+    @Column(name = "revanche_convidado", nullable = false)
+    public boolean revancheConvidado;
 
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
