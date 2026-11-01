@@ -16,6 +16,9 @@ public enum CodigoErro {
     // login
     SENHA_INVALIDA,
     CREDENCIAIS_INVALIDAS,
+    // perfil e histórico
+    NICK_INVALIDO,
+    FILTRO_INVALIDO,
     // salas
     PIN_INVALIDO,
     PIN_NAO_ENCONTRADO,
@@ -46,6 +49,9 @@ public enum CodigoErro {
         }
         if (e instanceof CredenciaisInvalidasException) {
             return CREDENCIAIS_INVALIDAS;
+        }
+        if (e instanceof FiltroInvalidoException) {
+            return FILTRO_INVALIDO;
         }
         if (e instanceof PartidaInvalidaException) {
             return PARTIDA_INVALIDA;

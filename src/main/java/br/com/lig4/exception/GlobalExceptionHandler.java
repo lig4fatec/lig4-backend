@@ -31,6 +31,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.UNAUTHORIZED, CodigoErro.de(e), e.getMessage());
     }
 
+    @ExceptionHandler(FiltroInvalidoException.class)
+    public ResponseEntity<ErroResponse> filtroInvalido(FiltroInvalidoException e) {
+        return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());
+    }
+
     @ExceptionHandler(PartidaInvalidaException.class)
     public ResponseEntity<ErroResponse> invalida(PartidaInvalidaException e) {
         return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());
@@ -71,8 +76,11 @@ public class GlobalExceptionHandler {
         return resposta(status, CodigoErro.de(e), e.getMessage());
     }
 
-    /** Cor, e-mail e senha têm código próprio, porque o front mostra a mensagem junto ao campo. */
+    /** Nick, cor, e-mail e senha têm código próprio, porque o front mostra a mensagem junto ao campo. */
     private CodigoErro codigoDaValidacao(List<FieldError> erros) {
+        if (erros.stream().anyMatch(erro -> "nick".equals(erro.getField()))) {
+            return CodigoErro.NICK_INVALIDO;
+        }
         if (erros.stream().anyMatch(erro -> "cor".equals(erro.getField()))) {
             return CodigoErro.COR_INVALIDA;
         }
