@@ -26,6 +26,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.CONFLICT, CodigoErro.de(e), e.getMessage());
     }
 
+    @ExceptionHandler(CredenciaisInvalidasException.class)
+    public ResponseEntity<ErroResponse> credenciaisInvalidas(CredenciaisInvalidasException e) {
+        return resposta(HttpStatus.UNAUTHORIZED, CodigoErro.de(e), e.getMessage());
+    }
+
     @ExceptionHandler(PartidaInvalidaException.class)
     public ResponseEntity<ErroResponse> invalida(PartidaInvalidaException e) {
         return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());
@@ -38,7 +43,7 @@ public class GlobalExceptionHandler {
             case SEM_PERMISSAO -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.BAD_REQUEST;
         };
-        
+
         return resposta(status, e.codigo(), e.getMessage());
     }
 
@@ -66,13 +71,16 @@ public class GlobalExceptionHandler {
         return resposta(status, CodigoErro.de(e), e.getMessage());
     }
 
-    /** Cor e e-mail têm código próprio, porque o front mostra a mensagem junto ao campo. */
+    /** Cor, e-mail e senha têm código próprio, porque o front mostra a mensagem junto ao campo. */
     private CodigoErro codigoDaValidacao(List<FieldError> erros) {
         if (erros.stream().anyMatch(erro -> "cor".equals(erro.getField()))) {
             return CodigoErro.COR_INVALIDA;
         }
         if (erros.stream().anyMatch(erro -> "email".equals(erro.getField()))) {
             return CodigoErro.EMAIL_INVALIDO;
+        }
+        if (erros.stream().anyMatch(erro -> "senha".equals(erro.getField()))) {
+            return CodigoErro.SENHA_INVALIDA;
         }
         return CodigoErro.DADOS_INVALIDOS;
     }

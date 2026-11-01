@@ -51,6 +51,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!-- Só o BCrypt (hash de senha). Não ativa o Spring Security nem bloqueia rotas. -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
         <!-- Swagger UI em /swagger-ui. Confirme a versão compatível com seu Spring Boot em springdoc.org -->
         <dependency>
             <groupId>org.springdoc</groupId>
