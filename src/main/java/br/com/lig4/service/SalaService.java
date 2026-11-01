@@ -2,7 +2,11 @@ package br.com.lig4.service;
 
 import br.com.lig4.domain.FaseSala;
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.Sala;
+import br.com.lig4.domain.StatusPartida;
+import br.com.lig4.dto.SalaAcaoRequestDTO;
+import br.com.lig4.dto.SalaCorRequestDTO;
 import br.com.lig4.dto.SalaCriarRequestDTO;
 import br.com.lig4.dto.SalaEntrarRequestDTO;
 import br.com.lig4.dto.SalaResponseDTO;
@@ -11,6 +15,7 @@ import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.exception.SalaInvalidaException;
 import br.com.lig4.exception.SalaNotFoundException;
 import br.com.lig4.repository.JogadorRepository;
+import br.com.lig4.repository.PartidaRepository;
 import br.com.lig4.repository.SalaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,11 +33,15 @@ public class SalaService {
 
     private final SalaRepository salaRepository;
     private final JogadorRepository jogadorRepository;
+    private final PartidaRepository partidaRepository;
     private final SecureRandom random = new SecureRandom();
 
-    public SalaService(SalaRepository salaRepository, JogadorRepository jogadorRepository) {
+    public SalaService(SalaRepository salaRepository,
+                       JogadorRepository jogadorRepository,
+                       PartidaRepository partidaRepository) {
         this.salaRepository = salaRepository;
         this.jogadorRepository = jogadorRepository;
+        this.partidaRepository = partidaRepository;
     }
 
     @Transactional
@@ -59,14 +68,10 @@ public class SalaService {
      */
     @Transactional
     public SalaResponseDTO entrar(SalaEntrarRequestDTO dto) {
-        String pin = validarPin(dto.pin());
-        Sala sala = salaRepository.buscarPorPinComLock(pin)
-                .orElseThrow(() -> new SalaNotFoundException(pin));
+        Sala sala = buscarComLock(dto.pin());
         Jogador jogador = buscarJogadorOuFalhar(dto.jogadorId());
 
-        boolean jaEstaNaSala = jogador.id.equals(sala.dono.id)
-                || (sala.convidado != null && jogador.id.equals(sala.convidado.id));
-        if (jaEstaNaSala) {
+        if (ehDono(sala, jogador.id) || ehConvidado(sala, jogador.id)) {
             return SalaResponseDTO.from(sala);
         }
 
@@ -89,6 +94,98 @@ public class SalaService {
         String valido = validarPin(pin);
         return SalaResponseDTO.from(salaRepository.findByPin(valido)
                 .orElseThrow(() -> new SalaNotFoundException(valido)));
+    }
+
+    /** Troca a cor de quem está na sala, enquanto a partida não começou. */
+    @Transactional
+    public SalaResponseDTO trocarCor(String pin, SalaCorRequestDTO dto) {
+        Sala sala = buscarComLock(pin);
+        boolean dono = ehDono(sala, dto.jogadorId());
+        if (!dono && !ehConvidado(sala, dto.jogadorId())) {
+            throw new SalaInvalidaException(CodigoErro.SEM_PERMISSAO, "Este jogador não está na sala");
+        }
+        exigirAguardando(sala);
+
+        String corDoOutro = dono ? sala.corConvidado : sala.corDono;
+        if (dto.cor().equals(corDoOutro)) {
+            throw new SalaInvalidaException(CodigoErro.COR_JA_ESCOLHIDA,
+                    "Essa cor já foi escolhida pelo outro jogador");
+        }
+
+        if (dono) {
+            sala.corDono = dto.cor();
+        } else {
+            sala.corConvidado = dto.cor();
+        }
+        return SalaResponseDTO.from(sala);
+    }
+
+    /** Só o dono inicia, e só com o convidado na sala. O dono joga como jogador 1 e começa. */
+    @Transactional
+    public SalaResponseDTO iniciar(String pin, SalaAcaoRequestDTO dto) {
+        Sala sala = buscarComLock(pin);
+        if (!ehDono(sala, dto.jogadorId())) {
+            throw new SalaInvalidaException(CodigoErro.SEM_PERMISSAO, "Só o dono da sala pode iniciar a partida");
+        }
+        exigirAguardando(sala);
+        if (sala.convidado == null) {
+            throw new SalaInvalidaException(CodigoErro.SEM_CONVIDADO, "Aguarde o segundo jogador entrar na sala");
+        }
+
+        Partida partida = new Partida();
+        partida.jogadorUm = sala.dono;
+        partida.jogadorDois = sala.convidado;
+        partida.status = StatusPartida.EM_ANDAMENTO;
+        partidaRepository.save(partida);
+
+        sala.partida = partida;
+        sala.fase = FaseSala.JOGANDO;
+        return SalaResponseDTO.from(sala);
+    }
+
+    /**
+     * Sai da sala. No lobby, o convidado libera a vaga e, se o dono sair, a sala deixa de existir.
+     * Com a partida já iniciada, a sala é encerrada.
+     */
+    @Transactional
+    public void sair(String pin, SalaAcaoRequestDTO dto) {
+        Sala sala = buscarComLock(pin);
+        boolean dono = ehDono(sala, dto.jogadorId());
+        if (!dono && !ehConvidado(sala, dto.jogadorId())) {
+            throw new SalaInvalidaException(CodigoErro.SEM_PERMISSAO, "Este jogador não está na sala");
+        }
+
+        if (sala.fase == FaseSala.AGUARDANDO) {
+            if (dono) {
+                salaRepository.delete(sala);
+            } else {
+                sala.convidado = null;
+                sala.corConvidado = null;
+            }
+        } else {
+            sala.fase = FaseSala.ENCERRADA;
+        }
+    }
+
+    private Sala buscarComLock(String pin) {
+        String valido = validarPin(pin);
+        return salaRepository.buscarPorPinComLock(valido)
+                .orElseThrow(() -> new SalaNotFoundException(valido));
+    }
+
+    private void exigirAguardando(Sala sala) {
+        if (sala.fase != FaseSala.AGUARDANDO) {
+            throw new SalaInvalidaException(CodigoErro.FASE_INVALIDA,
+                    "Esta ação só é possível enquanto a sala aguarda o início da partida");
+        }
+    }
+
+    private boolean ehDono(Sala sala, Long jogadorId) {
+        return sala.dono.id.equals(jogadorId);
+    }
+
+    private boolean ehConvidado(Sala sala, Long jogadorId) {
+        return sala.convidado != null && sala.convidado.id.equals(jogadorId);
     }
 
     private String validarPin(String pin) {

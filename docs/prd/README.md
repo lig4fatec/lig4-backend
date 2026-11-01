@@ -19,11 +19,12 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | PRD | Título | Estado |
 |---|---|---|
 | [0001](0001-estrutura-de-documentacao-e-padronizacao-de-commits.md) | Estrutura de documentação e padronização de commits | Implementado |
-| [0002](0002-migracao-para-spring-boot-e-motor-de-regras.md) | Migração para Spring Boot e motor de regras do jogo | Proposta |
-| [0003](0003-persistencia-de-jogadas.md) | Persistência e registro das jogadas | Proposta |
-| [0004](0004-estado-da-partida.md) | Consulta do estado da partida | Proposta |
-| [0005](0005-websocket-da-partida.md) | Comunicação em tempo real da partida via WebSocket | Proposta |
-| [0006](0006-cor-da-peca-do-jogador.md) | Cor da peça escolhida no perfil do jogador | Proposta |
-| [0007](0007-codigo-de-erro-nas-respostas.md) | Código de erro nas respostas da API | Proposta |
-| [0008](0008-cors-e-origens-permitidas.md) | CORS e origens permitidas do front-end | Proposta |
-| [0009](0009-salas-por-pin.md) | Salas por PIN: criar, entrar e consultar | Proposta |
+| [0002](0002-migracao-para-spring-boot-e-motor-de-regras.md) | Migração para Spring Boot e motor de regras do jogo | Implementado |
+| [0003](0003-persistencia-de-jogadas.md) | Persistência e registro das jogadas | Implementado |
+| [0004](0004-estado-da-partida.md) | Consulta do estado da partida | Implementado |
+| [0005](0005-websocket-da-partida.md) | Comunicação em tempo real da partida via WebSocket | Implementado |
+| [0006](0006-cor-da-peca-do-jogador.md) | Cor da peça escolhida no perfil do jogador | Implementado |
+| [0007](0007-codigo-de-erro-nas-respostas.md) | Código de erro nas respostas da API | Implementado |
+| [0008](0008-cors-e-origens-permitidas.md) | CORS e origens permitidas do front-end | Implementado |
+| [0009](0009-salas-por-pin.md) | Salas por PIN: criar, entrar e consultar | Implementado |
+| [0010](0010-lobby-da-sala.md) | Lobby da sala: trocar cor, iniciar e sair | Proposta |

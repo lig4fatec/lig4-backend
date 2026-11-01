@@ -34,9 +34,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SalaInvalidaException.class)
     public ResponseEntity<ErroResponse> salaInvalida(SalaInvalidaException e) {
         HttpStatus status = switch (e.codigo()) {
-            case SALA_CHEIA, COR_JA_ESCOLHIDA -> HttpStatus.CONFLICT;
+            case SALA_CHEIA, COR_JA_ESCOLHIDA, SEM_CONVIDADO, FASE_INVALIDA -> HttpStatus.CONFLICT;
+            case SEM_PERMISSAO -> HttpStatus.FORBIDDEN;
             default -> HttpStatus.BAD_REQUEST;
         };
+        
         return resposta(status, e.codigo(), e.getMessage());
     }
 

@@ -19,11 +19,15 @@ public enum CodigoErro {
     SALA_CHEIA,
     COR_JA_ESCOLHIDA,
     SERIE_INVALIDA,
+    SEM_PERMISSAO,
+    SEM_CONVIDADO,
+    FASE_INVALIDA,
     // motivos de jogada inválida (mesmos nomes de JogadaInvalidaException.Motivo)
     JOGO_ENCERRADO,
     FORA_DO_TURNO,
     COLUNA_INVALIDA,
     COLUNA_CHEIA;
+    
 
     public static CodigoErro de(RuntimeException e) {
         if (e instanceof JogadorNotFoundException) {
@@ -48,5 +52,7 @@ public enum CodigoErro {
             return valueOf(jogada.getMotivo().name());
         }
         return ERRO_INTERNO;
+
+        
     }
 }
