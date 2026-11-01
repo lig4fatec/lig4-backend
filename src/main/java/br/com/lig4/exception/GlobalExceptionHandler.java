@@ -36,6 +36,15 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());
     }
 
+    @ExceptionHandler(LojaInvalidaException.class)
+    public ResponseEntity<ErroResponse> lojaInvalida(LojaInvalidaException e) {
+        HttpStatus status = switch (e.codigo()) {
+            case ITEM_INEXISTENTE -> HttpStatus.NOT_FOUND;
+            default -> HttpStatus.CONFLICT; // ITEM_NAO_POSSUIDO, ITEM_JA_POSSUIDO, SALDO_INSUFICIENTE
+        };
+        return resposta(status, e.codigo(), e.getMessage());
+    }
+
     @ExceptionHandler(PartidaInvalidaException.class)
     public ResponseEntity<ErroResponse> invalida(PartidaInvalidaException e) {
         return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());
