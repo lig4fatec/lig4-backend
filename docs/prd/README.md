@@ -27,4 +27,5 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0007](0007-codigo-de-erro-nas-respostas.md) | Código de erro nas respostas da API | Implementado |
 | [0008](0008-cors-e-origens-permitidas.md) | CORS e origens permitidas do front-end | Implementado |
 | [0009](0009-salas-por-pin.md) | Salas por PIN: criar, entrar e consultar | Implementado |
-| [0010](0010-lobby-da-sala.md) | Lobby da sala: trocar cor, iniciar e sair | Proposta |
+| [0010](0010-lobby-da-sala.md) | Lobby da sala: trocar cor, iniciar e sair | Implementado |
+| [0011](0011-partida-da-sala.md) | Partida ligada à sala | Proposta |

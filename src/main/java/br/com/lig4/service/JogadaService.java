@@ -1,12 +1,15 @@
 package br.com.lig4.service;
 
+import br.com.lig4.domain.FaseSala;
 import br.com.lig4.domain.JogadaRegistro;
 import br.com.lig4.domain.Jogador;
 import br.com.lig4.domain.Partida;
+import br.com.lig4.domain.Sala;
 import br.com.lig4.domain.StatusPartida;
 import br.com.lig4.dto.JogadaHistoricoDTO;
 import br.com.lig4.dto.JogadaRequestDTO;
 import br.com.lig4.dto.JogadaResponseDTO;
+import br.com.lig4.dto.JogadorResumoDTO;
 import br.com.lig4.dto.PartidaEstadoDTO;
 import br.com.lig4.engine.Disco;
 import br.com.lig4.engine.Jogada;
@@ -19,9 +22,9 @@ import br.com.lig4.exception.PartidaNotFoundException;
 import br.com.lig4.repository.JogadaRegistroRepository;
 import br.com.lig4.repository.JogadorRepository;
 import br.com.lig4.repository.PartidaRepository;
+import br.com.lig4.repository.SalaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import br.com.lig4.dto.JogadorResumoDTO;
 
 import java.time.Instant;
 import java.util.List;
@@ -32,13 +35,16 @@ public class JogadaService {
     private final PartidaRepository partidaRepository;
     private final JogadorRepository jogadorRepository;
     private final JogadaRegistroRepository jogadaRepository;
+    private final SalaRepository salaRepository;
 
     public JogadaService(PartidaRepository partidaRepository,
                          JogadorRepository jogadorRepository,
-                         JogadaRegistroRepository jogadaRepository) {
+                         JogadaRegistroRepository jogadaRepository,
+                         SalaRepository salaRepository) {
         this.partidaRepository = partidaRepository;
         this.jogadorRepository = jogadorRepository;
         this.jogadaRepository = jogadaRepository;
+        this.salaRepository = salaRepository;
     }
 
     @Transactional
@@ -83,6 +89,8 @@ public class JogadaService {
                 partida.vencedor = jogador;
                 vencedorId = jogador.id;
             }
+            // a sala de origem também termina, e o front percebe ao consultá-la
+            salaRepository.findByPartidaId(partidaId).ifPresent(sala -> sala.fase = FaseSala.ENCERRADA);
         }
 
         return new JogadaResponseDTO(
@@ -107,21 +115,7 @@ public class JogadaService {
                 .toList();
     }
 
-    private Disco discoDe(Partida partida, Long jogadorId) {
-        if (jogadorId.equals(partida.jogadorUm.id)) {
-            return Disco.VERMELHO;
-        }
-        if (jogadorId.equals(partida.jogadorDois.id)) {
-            return Disco.AMARELO;
-        }
-        throw new PartidaInvalidaException("O jogador " + jogadorId + " não participa desta partida");
-    }
-
-    private Long jogadorDe(Partida partida, Disco disco) {
-        return disco == Disco.VERMELHO ? partida.jogadorUm.id : partida.jogadorDois.id;
-    }
-
-        @Transactional(readOnly = true)
+    @Transactional(readOnly = true)
     public PartidaEstadoDTO estado(Long partidaId) {
         Partida partida = partidaRepository.findById(partidaId)
                 .orElseThrow(() -> new PartidaNotFoundException(partidaId));
@@ -139,16 +133,27 @@ public class JogadaService {
                 ? jogadorDe(partida, jogo.getTurno())
                 : null;
 
-                return new PartidaEstadoDTO(
+        // Na sala, o dono é o jogador 1 (começa) e o convidado é o jogador 2.
+        Sala sala = salaRepository.findByPartidaId(partidaId).orElse(null);
+        JogadorResumoDTO jogadorUm = sala == null
+                ? JogadorResumoDTO.from(partida.jogadorUm)
+                : new JogadorResumoDTO(partida.jogadorUm.id, partida.jogadorUm.nome, sala.corDono);
+        JogadorResumoDTO jogadorDois = sala == null
+                ? JogadorResumoDTO.from(partida.jogadorDois)
+                : new JogadorResumoDTO(partida.jogadorDois.id, partida.jogadorDois.nome, sala.corConvidado);
+
+        return new PartidaEstadoDTO(
                 partida.id,
-                JogadorResumoDTO.from(partida.jogadorUm),
-                JogadorResumoDTO.from(partida.jogadorDois),
+                jogadorUm,
+                jogadorDois,
                 partida.status,
                 jogo.getStatus(),
                 vencedorId,
                 proximoJogadorId,
                 jogadas.size(),
-                jogo.getTabuleiro().comoMatriz());
+                jogo.getTabuleiro().comoMatriz(),
+                sala == null ? null : sala.pin,
+                sala == null ? null : sala.serie);
     }
 
     @Transactional(readOnly = true)
@@ -156,5 +161,19 @@ public class JogadaService {
         Partida partida = partidaRepository.findById(partidaId)
                 .orElseThrow(() -> new PartidaNotFoundException(partidaId));
         discoDe(partida, jogadorId);
+    }
+
+    private Disco discoDe(Partida partida, Long jogadorId) {
+        if (jogadorId.equals(partida.jogadorUm.id)) {
+            return Disco.VERMELHO;
+        }
+        if (jogadorId.equals(partida.jogadorDois.id)) {
+            return Disco.AMARELO;
+        }
+        throw new PartidaInvalidaException("O jogador " + jogadorId + " não participa desta partida");
+    }
+
+    private Long jogadorDe(Partida partida, Disco disco) {
+        return disco == Disco.VERMELHO ? partida.jogadorUm.id : partida.jogadorDois.id;
     }
 }
