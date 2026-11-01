@@ -31,6 +31,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.UNAUTHORIZED, CodigoErro.de(e), e.getMessage());
     }
 
+    @ExceptionHandler(FiltroInvalidoException.class)
+    public ResponseEntity<ErroResponse> filtroInvalido(FiltroInvalidoException e) {
+        return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());
+    }
+
     @ExceptionHandler(PartidaInvalidaException.class)
     public ResponseEntity<ErroResponse> invalida(PartidaInvalidaException e) {
         return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());

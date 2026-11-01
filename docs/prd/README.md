@@ -31,4 +31,5 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0011](0011-partida-da-sala.md) | Partida ligada à sala | Implementado |
 | [0012](0012-revanche-com-alternancia.md) | Revanche com alternância de quem começa | Implementado |
 | [0014](0014-login-essencial.md) | Login essencial: cadastro e entrada com senha | Implementado |
+| [0016](0016-historico-de-partidas.md) | Histórico de partidas do jogador | Implementado |
 | [0015](0015-perfil-estatisticas-e-moedas.md) | Perfil, estatísticas e moedas do jogador | Implementado |
