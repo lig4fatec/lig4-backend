@@ -19,8 +19,6 @@ public enum CodigoErro {
     // perfil e histórico
     NICK_INVALIDO,
     FILTRO_INVALIDO,
-    // perfil
-    NICK_INVALIDO,
     // salas
     PIN_INVALIDO,
     PIN_NAO_ENCONTRADO,
