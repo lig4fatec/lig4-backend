@@ -2,6 +2,7 @@
 
 - **Data:** 2026-10-21
 - **Estado:** Proposta
+- **Desenvolvedor** Thamires
 
 ## Objetivo
 
