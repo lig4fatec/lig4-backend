@@ -1,0 +1,1 @@
+ALTER TABLE jogador ADD COLUMN cor VARCHAR(7);

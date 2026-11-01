@@ -23,3 +23,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0003](0003-persistencia-de-jogadas.md) | Persistência e registro das jogadas | Proposta |
 | [0004](0004-estado-da-partida.md) | Consulta do estado da partida | Proposta |
 | [0005](0005-websocket-da-partida.md) | Comunicação em tempo real da partida via WebSocket | Proposta |
+| [0006](0006-cor-da-peca-do-jogador.md) | Cor da peça escolhida no perfil do jogador | Proposta |

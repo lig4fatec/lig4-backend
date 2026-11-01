@@ -1,5 +1,6 @@
 package br.com.lig4.controller;
 
+import br.com.lig4.dto.CorRequestDTO;
 import br.com.lig4.dto.JogadorRequestDTO;
 import br.com.lig4.dto.JogadorResponseDTO;
 import br.com.lig4.service.JogadorService;
@@ -52,5 +53,10 @@ public class JogadorController {
     public ResponseEntity<Void> remover(@PathVariable Long id) {
         service.remover(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}/cor")
+    public JogadorResponseDTO alterarCor(@PathVariable Long id, @Valid @RequestBody CorRequestDTO dto) {
+        return service.alterarCor(id, dto);
     }
 }

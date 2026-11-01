@@ -47,4 +47,24 @@ class JogadorControllerTest extends ApiTestSupport {
     void deveRetornar404ParaJogadorInexistente() {
         assertEquals(404, get("/jogadores/999999999").status());
     }
+
+        @Test
+    void deveGuardarEAlterarACorDoJogador() {
+        Resposta criado = enviar("POST", "/jogadores",
+                "{\"nome\":\"Cora\",\"email\":\"%s\",\"cor\":\"#1E88E5\"}".formatted(emailUnico("cora")));
+        assertEquals(201, criado.status());
+        assertTrue(criado.corpo().contains("\"cor\":\"#1E88E5\""));
+
+        Resposta alterada = enviar("PUT", "/jogadores/" + criado.id() + "/cor", "{\"cor\":\"#43A047\"}");
+        assertEquals(200, alterada.status());
+        assertTrue(alterada.corpo().contains("\"cor\":\"#43A047\""));
+        assertTrue(get("/jogadores/" + criado.id()).corpo().contains("#43A047"));
+    }
+
+    @Test
+    void naoDeveAceitarCorInvalida() {
+        Resposta r = enviar("POST", "/jogadores",
+                "{\"nome\":\"Davi\",\"email\":\"%s\",\"cor\":\"vermelho\"}".formatted(emailUnico("davi")));
+        assertEquals(400, r.status());
+    }
 }

@@ -1,6 +1,7 @@
 package br.com.lig4.service;
 
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.dto.CorRequestDTO;
 import br.com.lig4.dto.JogadorRequestDTO;
 import br.com.lig4.dto.JogadorResponseDTO;
 import br.com.lig4.exception.EmailJaCadastradoException;
@@ -43,6 +44,7 @@ public class JogadorService {
         Jogador jogador = new Jogador();
         jogador.nome = dto.nome();
         jogador.email = dto.email();
+        jogador.cor = dto.cor();
         repository.save(jogador);
 
         return JogadorResponseDTO.from(jogador);
@@ -61,7 +63,18 @@ public class JogadorService {
 
         jogador.nome = dto.nome();
         jogador.email = dto.email();
+        if (dto.cor() != null) {
+            jogador.cor = dto.cor(); // sem cor no corpo, mantém a que já existe
+        }
 
+        return JogadorResponseDTO.from(jogador);
+    }
+
+    @Transactional
+    public JogadorResponseDTO alterarCor(Long id, CorRequestDTO dto) {
+        Jogador jogador = repository.findById(id)
+                .orElseThrow(() -> new JogadorNotFoundException(id));
+        jogador.cor = dto.cor();
         return JogadorResponseDTO.from(jogador);
     }
 

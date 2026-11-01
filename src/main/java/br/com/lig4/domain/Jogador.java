@@ -31,4 +31,7 @@ public class Jogador {
     public void prePersist() {
         this.criadoEm = Instant.now();
     }
+
+    @Column(length = 7)
+    public String cor;
 }

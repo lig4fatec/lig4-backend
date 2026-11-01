@@ -8,9 +8,10 @@ public record JogadorResponseDTO(
         Long id,
         String nome,
         String email,
-        Instant criadoEm
+        Instant criadoEm,
+        String cor
 ) {
     public static JogadorResponseDTO from(Jogador jogador) {
-        return new JogadorResponseDTO(jogador.id, jogador.nome, jogador.email, jogador.criadoEm);
+        return new JogadorResponseDTO(jogador.id, jogador.nome, jogador.email, jogador.criadoEm, jogador.cor);
     }
 }
