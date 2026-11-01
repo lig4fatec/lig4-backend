@@ -16,6 +16,8 @@ public enum CodigoErro {
     // login
     SENHA_INVALIDA,
     CREDENCIAIS_INVALIDAS,
+    // perfil
+    NICK_INVALIDO,
     // salas
     PIN_INVALIDO,
     PIN_NAO_ENCONTRADO,

@@ -16,6 +16,8 @@ import java.util.Locale;
 @Service
 public class AuthService {
 
+    private static final int TAMANHO_MAXIMO_NICK = 20;
+
     private final JogadorRepository repository;
     private final PasswordEncoder encoder;
 
@@ -55,9 +57,10 @@ public class AuthService {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
-    /** O front só envia e-mail e senha; o nome começa como a parte antes do @ (o perfil muda depois). */
+    /** O front só envia e-mail e senha; o nick começa como a parte antes do @ (o perfil muda depois). */
     private String nomeInicial(String email) {
         int arroba = email.indexOf('@');
-        return arroba > 0 ? email.substring(0, arroba) : email;
+        String base = arroba > 0 ? email.substring(0, arroba) : email;
+        return base.length() > TAMANHO_MAXIMO_NICK ? base.substring(0, TAMANHO_MAXIMO_NICK) : base;
     }
 }
