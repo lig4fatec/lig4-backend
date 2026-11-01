@@ -24,3 +24,6 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0004](0004-estado-da-partida.md) | Consulta do estado da partida | Proposta |
 | [0005](0005-websocket-da-partida.md) | Comunicação em tempo real da partida via WebSocket | Proposta |
 | [0006](0006-cor-da-peca-do-jogador.md) | Cor da peça escolhida no perfil do jogador | Proposta |
+| [0007](0007-codigo-de-erro-nas-respostas.md) | Código de erro nas respostas da API | Proposta |
+| [0008](0008-cors-e-origens-permitidas.md) | CORS e origens permitidas do front-end | Proposta |
+| [0009](0009-salas-por-pin.md) | Salas por PIN: criar, entrar e consultar | Proposta |

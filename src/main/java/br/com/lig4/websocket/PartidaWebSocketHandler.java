@@ -3,6 +3,7 @@ package br.com.lig4.websocket;
 import br.com.lig4.dto.JogadaRequestDTO;
 import br.com.lig4.dto.JogadaResponseDTO;
 import br.com.lig4.engine.JogadaInvalidaException;
+import br.com.lig4.exception.CodigoErro;
 import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.exception.PartidaInvalidaException;
 import br.com.lig4.exception.PartidaNotFoundException;
@@ -40,7 +41,10 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    record Mensagem(String tipo, Object dados, String mensagem) {
+    record Mensagem(String tipo, Object dados, String codigo, String mensagem) {
+        Mensagem(String tipo, Object dados, String mensagem) {
+            this(tipo, dados, null, mensagem);
+        }
     }
 
     private final JogadaService jogadaService;
@@ -61,7 +65,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
             jogadorId = jogadorIdDe(session);
             jogadaService.validarParticipante(partidaId, jogadorId);
         } catch (RuntimeException e) {
-            enviar(session, new Mensagem("ERRO", null, mensagemDe(e)));
+            enviar(session, erro(e));
             session.close(CloseStatus.POLICY_VIOLATION);
             return;
         }
@@ -98,7 +102,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
                         "Tipo de mensagem desconhecido: " + comando.tipo());
             }
         } catch (RuntimeException e) {
-            enviar(session, new Mensagem("ERRO", null, mensagemDe(e)));
+            enviar(session, erro(e));
         }
     }
 
@@ -153,6 +157,10 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
         } catch (IOException | RuntimeException e) {
             log.warn("Falha ao enviar mensagem WebSocket: {}", e.getMessage());
         }
+    }
+
+    private Mensagem erro(RuntimeException e) {
+        return new Mensagem("ERRO", null, CodigoErro.de(e).name(), mensagemDe(e));
     }
 
     private String mensagemDe(RuntimeException e) {
