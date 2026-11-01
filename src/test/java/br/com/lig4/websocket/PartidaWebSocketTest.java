@@ -142,5 +142,6 @@ class PartidaWebSocketTest {
 
         String mensagem = c.proxima();
         assertTrue(mensagem.contains("\"tipo\":\"ERRO\""));
+        assertTrue(mensagem.contains("\"codigo\":\"PARTIDA_INVALIDA\""));
     }
 }

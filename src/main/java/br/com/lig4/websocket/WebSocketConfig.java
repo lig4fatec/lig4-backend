@@ -1,5 +1,6 @@
 package br.com.lig4.websocket;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -10,14 +11,16 @@ import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry
 public class WebSocketConfig implements WebSocketConfigurer {
 
     private final PartidaWebSocketHandler handler;
+    private final String[] origens;
 
-    public WebSocketConfig(PartidaWebSocketHandler handler) {
+    public WebSocketConfig(PartidaWebSocketHandler handler,
+                           @Value("${lig4.origens-permitidas}") String[] origens) {
         this.handler = handler;
+        this.origens = origens;
     }
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        // Origens liberadas para o front-end em desenvolvimento; restringir antes de publicar
-        registry.addHandler(handler, "/ws/partidas/*").setAllowedOriginPatterns("*");
+        registry.addHandler(handler, "/ws/partidas/*").setAllowedOriginPatterns(origens);
     }
 }
