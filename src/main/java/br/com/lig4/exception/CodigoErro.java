@@ -19,6 +19,11 @@ public enum CodigoErro {
     // perfil e histórico
     NICK_INVALIDO,
     FILTRO_INVALIDO,
+    // loja
+    ITEM_INEXISTENTE,
+    ITEM_NAO_POSSUIDO,
+    ITEM_JA_POSSUIDO,
+    SALDO_INSUFICIENTE,
     // salas
     PIN_INVALIDO,
     PIN_NAO_ENCONTRADO,
@@ -58,6 +63,9 @@ public enum CodigoErro {
         }
         if (e instanceof SalaInvalidaException sala) {
             return sala.codigo();
+        }
+        if (e instanceof LojaInvalidaException loja) {
+            return loja.codigo();
         }
         if (e instanceof JogadaInvalidaException jogada) {
             return valueOf(jogada.getMotivo().name());

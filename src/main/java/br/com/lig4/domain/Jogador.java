@@ -49,4 +49,14 @@ public class Jogador {
     /** Saldo da loja. Cresce ao fim de cada partida (ver RecompensaService). */
     @Column(nullable = false)
     public int moedas = 500;
+
+    // itens equipados na loja (um por categoria)
+    @Column(name = "avatar_equipado", nullable = false, length = 40)
+    public String avatarEquipado = "avatar-classico";
+
+    @Column(name = "tabuleiro_equipado", nullable = false, length = 40)
+    public String tabuleiroEquipado = "board-minimalista";
+
+    @Column(name = "emote_equipado", nullable = false, length = 40)
+    public String emoteEquipado = "emote-saudacao";
 }
