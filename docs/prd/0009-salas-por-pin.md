@@ -1,7 +1,7 @@
 # PRD-0009. Salas por PIN: criar, entrar e consultar
 
 - **Data:** 2026-11-01
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

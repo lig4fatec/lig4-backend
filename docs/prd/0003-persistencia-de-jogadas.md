@@ -1,7 +1,7 @@
 # PRD-0003. Persistência e registro das jogadas
 
 - **Data:** 2026-10-21
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

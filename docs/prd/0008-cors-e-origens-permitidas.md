@@ -1,7 +1,7 @@
 # PRD-0008. CORS e origens permitidas do front-end
 
 - **Data:** 2026-11-01
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

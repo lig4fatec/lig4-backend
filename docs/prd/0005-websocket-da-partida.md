@@ -1,7 +1,7 @@
 # PRD-0005. Comunicação em tempo real da partida via WebSocket
 
 - **Data:** 2026-10-21
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

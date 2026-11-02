@@ -1,7 +1,7 @@
 # 0003. Adoção de Spring Boot como framework do back-end
 
 - **Data:** 2026-10-21
-- **Estado:** Proposta
+- **Estado:** Aceita
 
 ## Contexto
 

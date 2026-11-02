@@ -1,7 +1,7 @@
 # PRD-0006. Cor da peça escolhida no perfil do jogador
 
 - **Data:** 2026-10-21
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

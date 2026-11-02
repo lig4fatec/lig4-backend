@@ -1,7 +1,7 @@
 # PRD-0010. Lobby da sala: trocar cor, iniciar e sair
 
 - **Data:** 2026-11-01
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo
