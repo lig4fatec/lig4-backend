@@ -1,7 +1,7 @@
 # PRD-0007. Código de erro nas respostas da API
 
 - **Data:** 2026-11-01
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

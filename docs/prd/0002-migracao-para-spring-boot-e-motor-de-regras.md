@@ -1,7 +1,7 @@
 # PRD-0002. Migração para Spring Boot e motor de regras do jogo
 
 - **Data:** 2026-10-21
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

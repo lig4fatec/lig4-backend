@@ -1,7 +1,7 @@
 # PRD-0011. Partida ligada à sala
 
 - **Data:** 2026-11-01
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo

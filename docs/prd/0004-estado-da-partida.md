@@ -1,7 +1,7 @@
 # PRD-0004. Consulta do estado da partida
 
 - **Data:** 2026-10-21
-- **Estado:** Proposta
+- **Estado:** Aceito
 - **Desenvolvedor** Thamires
 
 ## Objetivo
