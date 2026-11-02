@@ -138,8 +138,9 @@ public class SalaService {
     }
 
     /**
-     * Pede a revanche. Quando os dois pedem, começa uma nova partida com os mesmos jogadores,
-     * e quem começou a anterior passa a jogar em segundo.
+     * Pede a próxima partida (revanche). Quando os dois pedem, começa uma nova partida com os mesmos
+     * jogadores, e quem começou a anterior passa a jogar em segundo. Se a série já foi decidida,
+     * a nova partida abre uma série nova, com o placar zerado.
      */
     @Transactional
     public SalaResponseDTO revanche(String pin, SalaAcaoRequestDTO dto) {
@@ -161,6 +162,9 @@ public class SalaService {
         }
 
         if (sala.revancheDono && sala.revancheConvidado) {
+            if (sala.serieDecidida()) {
+                sala.zerarPlacar(); // série nova
+            }
             Partida anterior = sala.partida;
             sala.partida = novaPartida(anterior.jogadorDois, anterior.jogadorUm);
             sala.fase = FaseSala.JOGANDO;
