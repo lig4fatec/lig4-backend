@@ -72,6 +72,7 @@ Sala: `{pin, serie, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, 
 | Cliente → servidor | `{"tipo":"JOGAR","coluna":3}` ou `{"tipo":"ESTADO"}` |
 | Servidor → os dois | `{"tipo":"JOGADA","dados":{...jogada...}}` |
 | Servidor → quem errou | `{"tipo":"ERRO","codigo":"...","mensagem":"..."}` |
+| Servidor → os conectados, ao conectar ou desconectar alguém | `{"tipo":"PRESENCA","dados":{"conectados":[12,15]}}` |
 
 ## Códigos de erro
 

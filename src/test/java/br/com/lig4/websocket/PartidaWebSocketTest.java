@@ -1,5 +1,6 @@
 package br.com.lig4.websocket;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -35,10 +36,24 @@ class PartidaWebSocketTest {
             recebidas.add(message.getPayload());
         }
 
+        /** A próxima mensagem, qualquer que seja o tipo. */
         String proxima() throws InterruptedException {
             String mensagem = recebidas.poll(5, TimeUnit.SECONDS);
             assertNotNull(mensagem, "Nenhuma mensagem recebida em 5 segundos");
             return mensagem;
+        }
+
+        /** Consome mensagens até achar uma que contenha o trecho; falha se não chegar em 5 segundos. */
+        String esperar(String trecho) throws InterruptedException {
+            long limite = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+            while (true) {
+                long restante = Math.max(limite - System.nanoTime(), 0);
+                String mensagem = recebidas.poll(restante, TimeUnit.NANOSECONDS);
+                assertNotNull(mensagem, "Não chegou nenhuma mensagem com " + trecho + " em 5 segundos");
+                if (mensagem.contains(trecho)) {
+                    return mensagem;
+                }
+            }
         }
     }
 
@@ -76,8 +91,7 @@ class PartidaWebSocketTest {
         Cliente c1 = new Cliente();
         WebSocketSession s1 = conectar(partida, j1, c1);
 
-        String mensagem = c1.proxima();
-        assertTrue(mensagem.contains("\"tipo\":\"ESTADO\""));
+        String mensagem = c1.esperar("\"tipo\":\"ESTADO\"");
         assertTrue(mensagem.contains("\"proximoJogadorId\":" + j1));
         s1.close();
     }
@@ -92,15 +106,14 @@ class PartidaWebSocketTest {
         Cliente c2 = new Cliente();
         WebSocketSession s1 = conectar(partida, j1, c1);
         WebSocketSession s2 = conectar(partida, j2, c2);
-        c1.proxima(); // estado inicial
-        c2.proxima();
+        c1.esperar("\"tipo\":\"ESTADO\""); // estado inicial: garante que a conexão já foi registrada
+        c2.esperar("\"tipo\":\"ESTADO\"");
 
         s1.sendMessage(new TextMessage("{\"tipo\":\"JOGAR\",\"coluna\":3}"));
 
-        String para1 = c1.proxima();
-        String para2 = c2.proxima();
+        String para1 = c1.esperar("\"tipo\":\"JOGADA\"");
+        String para2 = c2.esperar("\"tipo\":\"JOGADA\"");
         assertTrue(para1.contains("\"tipo\":\"JOGADA\""));
-        assertTrue(para2.contains("\"tipo\":\"JOGADA\""));
         assertTrue(para2.contains("\"proximoJogadorId\":" + j2));
 
         s1.close();
@@ -117,14 +130,17 @@ class PartidaWebSocketTest {
         Cliente c2 = new Cliente();
         WebSocketSession s1 = conectar(partida, j1, c1);
         WebSocketSession s2 = conectar(partida, j2, c2);
-        c1.proxima();
-        c2.proxima();
+        c1.esperar("\"tipo\":\"ESTADO\"");
+        c2.esperar("\"tipo\":\"ESTADO\"");
 
         s2.sendMessage(new TextMessage("{\"tipo\":\"JOGAR\",\"coluna\":0}"));
 
-        String erro = c2.proxima();
-        assertTrue(erro.contains("\"tipo\":\"ERRO\""));
-        assertTrue(c1.recebidas.poll(1, TimeUnit.SECONDS) == null);
+        c2.esperar("\"tipo\":\"ERRO\"");
+        // o outro jogador pode receber avisos de presença, mas nunca o erro
+        String outra;
+        while ((outra = c1.recebidas.poll(1, TimeUnit.SECONDS)) != null) {
+            assertFalse(outra.contains("\"tipo\":\"ERRO\""), outra);
+        }
 
         s1.close();
         s2.close();
@@ -143,5 +159,67 @@ class PartidaWebSocketTest {
         String mensagem = c.proxima();
         assertTrue(mensagem.contains("\"tipo\":\"ERRO\""));
         assertTrue(mensagem.contains("\"codigo\":\"PARTIDA_INVALIDA\""));
+    }
+
+    @Test
+    void quemEntraDepoisAvisaOPrimeiro() throws Exception {
+        long j1 = novoJogador("Eva");
+        long j2 = novoJogador("Fabio");
+        long partida = novaPartida(j1, j2);
+
+        Cliente c1 = new Cliente();
+        WebSocketSession s1 = conectar(partida, j1, c1);
+        c1.esperar("\"conectados\":[" + j1 + "]");
+
+        Cliente c2 = new Cliente();
+        WebSocketSession s2 = conectar(partida, j2, c2);
+
+        c1.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+        c2.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+        s1.close();
+        s2.close();
+    }
+
+    @Test
+    void quemSaiAvisaOAdversario() throws Exception {
+        long j1 = novoJogador("Gina");
+        long j2 = novoJogador("Hugo");
+        long partida = novaPartida(j1, j2);
+
+        Cliente c1 = new Cliente();
+        Cliente c2 = new Cliente();
+        WebSocketSession s1 = conectar(partida, j1, c1);
+        WebSocketSession s2 = conectar(partida, j2, c2);
+        c1.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+
+        s2.close();
+
+        c1.esperar("\"conectados\":[" + j1 + "]");
+        s1.close();
+    }
+
+    @Test
+    void quemVoltaRecebeOEstadoEOAdversarioVeQueVoltou() throws Exception {
+        long j1 = novoJogador("Iris");
+        long j2 = novoJogador("Jonas");
+        long partida = novaPartida(j1, j2);
+
+        Cliente c1 = new Cliente();
+        Cliente c2 = new Cliente();
+        WebSocketSession s1 = conectar(partida, j1, c1);
+        WebSocketSession s2 = conectar(partida, j2, c2);
+        c1.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+        s2.sendMessage(new TextMessage("{\"tipo\":\"ESTADO\"}"));
+        s2.close();
+        c1.esperar("\"conectados\":[" + j1 + "]");
+
+        Cliente volta = new Cliente();
+        WebSocketSession s2Nova = conectar(partida, j2, volta);
+
+        String estado = volta.esperar("\"tipo\":\"ESTADO\"");
+        assertTrue(estado.contains("\"proximoJogadorId\":" + j1), estado);
+        c1.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+        s1.close();
+        s2Nova.close();
     }
 }
