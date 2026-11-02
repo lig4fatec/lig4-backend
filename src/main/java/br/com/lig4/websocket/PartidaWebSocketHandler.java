@@ -23,11 +23,12 @@ import tools.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Comunicação em tempo real de uma partida. Cada partida é uma "sala":
- * as jogadas aceitas são transmitidas aos dois jogadores conectados.
+ * as jogadas aceitas são transmitidas aos dois jogadores conectados, junto com a presença de cada um.
  */
 @Component
 public class PartidaWebSocketHandler extends TextWebSocketHandler {
@@ -65,6 +66,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
             jogadorId = jogadorIdDe(session);
             jogadaService.validarParticipante(partidaId, jogadorId);
         } catch (RuntimeException e) {
+            log.warn("Conexão WebSocket recusada: {}", e.getMessage());
             enviar(session, erro(e));
             session.close(CloseStatus.POLICY_VIOLATION);
             return;
@@ -73,8 +75,10 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
         session.getAttributes().put(ATTR_PARTIDA, partidaId);
         session.getAttributes().put(ATTR_JOGADOR, jogadorId);
         salas.computeIfAbsent(partidaId, k -> ConcurrentHashMap.newKeySet()).add(session);
+        log.info("WebSocket conectado: partida={} jogador={}", partidaId, jogadorId);
 
         enviar(session, new Mensagem("ESTADO", jogadaService.estado(partidaId), null));
+        transmitirPresenca(partidaId);
     }
 
     @Override
@@ -94,6 +98,8 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
                     }
                     JogadaResponseDTO resultado = jogadaService.jogar(partidaId,
                             new JogadaRequestDTO(jogadorId, comando.coluna()));
+                    log.info("Jogada aceita: partida={} jogador={} coluna={} resultado={}",
+                            partidaId, jogadorId, comando.coluna(), resultado.resultado());
                     transmitir(partidaId, new Mensagem("JOGADA", resultado, null));
                 }
                 case "ESTADO" -> enviar(session,
@@ -102,6 +108,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
                         "Tipo de mensagem desconhecido: " + comando.tipo());
             }
         } catch (RuntimeException e) {
+            log.warn("Mensagem recusada: partida={} jogador={} motivo={}", partidaId, jogadorId, e.getMessage());
             enviar(session, erro(e));
         }
     }
@@ -109,16 +116,36 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         Long partidaId = (Long) session.getAttributes().get(ATTR_PARTIDA);
+        Long jogadorId = (Long) session.getAttributes().get(ATTR_JOGADOR);
         if (partidaId == null) {
             return;
         }
+        log.info("WebSocket desconectado: partida={} jogador={} status={}", partidaId, jogadorId, status);
+
         Set<WebSocketSession> sala = salas.get(partidaId);
         if (sala != null) {
             sala.remove(session);
             if (sala.isEmpty()) {
                 salas.remove(partidaId);
+            } else {
+                transmitirPresenca(partidaId);
             }
         }
+    }
+
+    /** Avisa quem está conectado de quais jogadores estão na partida agora (ids sem repetição, em ordem). */
+    private void transmitirPresenca(Long partidaId) {
+        Set<WebSocketSession> sala = salas.get(partidaId);
+        if (sala == null || sala.isEmpty()) {
+            return;
+        }
+        Set<Long> conectados = new TreeSet<>();
+        for (WebSocketSession destino : sala) {
+            if (destino.getAttributes().get(ATTR_JOGADOR) instanceof Long id) {
+                conectados.add(id);
+            }
+        }
+        transmitir(partidaId, new Mensagem("PRESENCA", Map.of("conectados", conectados), null));
     }
 
     private Comando lerComando(String json) {
