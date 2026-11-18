@@ -39,6 +39,10 @@ public class Partida {
     @Column(nullable = false, length = 20)
     public StatusPartida status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    public ModoJogo modo = ModoJogo.CLASSICO;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 

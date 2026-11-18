@@ -30,13 +30,13 @@ Base local: `http://localhost:8080`. A API também está descrita no Swagger (`/
 
 Também existem `GET /jogadores`, `POST /jogadores`, `PUT /jogadores/{id}`, `DELETE /jogadores/{id}` e `PUT /jogadores/{id}/cor` (cor em `#RRGGBB`, formato antigo; o front usa o perfil).
 
-Moedas: cada jogador começa com 500. Ao fim de cada partida, vitória dá +50 e derrota ou empate dá +10.
+Moedas: cada jogador começa com 500. Ao fim de cada partida: no Clássico, vitória +15, empate +5 e derrota +2; no Caos, vitória +30, empate +10 e derrota +5.
 
 ## Salas
 
 | Método e rota | Corpo | Resposta |
 |---|---|---|
-| `POST /salas` | `{jogadorId, serie (1, 3 ou 5), cor}` | sala |
+| `POST /salas` | `{jogadorId, modo ("CLASSICO" ou "CAOS"; vazio vale CLASSICO), cor}` | sala |
 | `POST /salas/entrar` | `{jogadorId, pin, cor}` | sala (quem já está nela recebe a situação atual) |
 | `GET /salas/{pin}` | | sala (o front consulta a cada 2 s) |
 | `PUT /salas/{pin}/cor` | `{jogadorId, cor}` | sala |
@@ -44,23 +44,23 @@ Moedas: cada jogador começa com 500. Ao fim de cada partida, vitória dá +50 e
 | `POST /salas/{pin}/revanche` | `{jogadorId}` | sala |
 | `POST /salas/{pin}/sair` | `{jogadorId}` | 204 |
 
-Sala: `{pin, serie, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, placar, serieEncerrada, campeaoId}`.
+Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe}`.
 
 - `fase`: `AGUARDANDO`, `JOGANDO` ou `ENCERRADA`.
 - A primeira partida começa pelo dono. A cada revanche, quem começa alterna.
-- Série "melhor de N": vence quem chega primeiro à maioria (1 → 1 vitória, 3 → 2, 5 → 3). `placar` traz as vitórias por id de jogador. Empate não pontua.
-- Com a série decidida, a revanche abre uma série nova com o placar zerado.
+- Modo: `CLASSICO` ou `CAOS` (aceita também minúsculas e sem acento). Outro valor devolve `MODO_INVALIDO`. A série e o placar foram removidos; um `serie` enviado por um front antigo é ignorado.
+- A revanche mantém o modo da sala.
 - Sair: no lobby o convidado libera a vaga e, se o dono sair, a sala some; com a partida em andamento a sala é encerrada; depois do fim, quem sai fecha a sala.
 
 ## Partidas
 
 | Método e rota | Corpo | Resposta |
 |---|---|---|
-| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, serie, placar, serieEncerrada}` |
+| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, modo}` |
 | `POST /partidas/{id}/jogadas` | `{jogadorId, coluna (0 a 6)}` | 201, jogada com o tabuleiro novo |
 | `GET /partidas/{id}/jogadas` | | jogadas em ordem |
 
-`pin`, `serie` e `placar` só vêm quando a partida nasceu de uma sala. Também existem `GET/POST /partidas`, `GET /partidas/{id}`, `PUT /partidas/{id}` (finalizar) e `DELETE /partidas/{id}`.
+`pin` só vem quando a partida nasceu de uma sala. `POST /partidas` aceita `modo` (`CLASSICO` por padrão). Também existem `GET/POST /partidas`, `GET /partidas/{id}`, `PUT /partidas/{id}` (finalizar) e `DELETE /partidas/{id}`.
 
 ## WebSocket da partida
 
@@ -78,16 +78,4 @@ Sala: `{pin, serie, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, 
 
 | Status | Códigos |
 |---|---|
-| 400 | `DADOS_INVALIDOS`, `REQUISICAO_INVALIDA`, `EMAIL_INVALIDO`, `SENHA_INVALIDA`, `NICK_INVALIDO`, `COR_INVALIDA`, `FILTRO_INVALIDO`, `PIN_INVALIDO`, `SERIE_INVALIDA`, `PARTIDA_INVALIDA`, `COLUNA_INVALIDA`, `COLUNA_CHEIA` |
-| 401 | `CREDENCIAIS_INVALIDAS` |
-| 403 | `SEM_PERMISSAO` |
-| 404 | `JOGADOR_NAO_ENCONTRADO`, `PARTIDA_NAO_ENCONTRADA`, `PIN_NAO_ENCONTRADO`, `ITEM_INEXISTENTE` |
-| 409 | `EMAIL_JA_CADASTRADO`, `SALA_CHEIA`, `COR_JA_ESCOLHIDA`, `SEM_CONVIDADO`, `FASE_INVALIDA`, `JOGO_ENCERRADO`, `FORA_DO_TURNO`, `ITEM_NAO_POSSUIDO`, `ITEM_JA_POSSUIDO`, `SALDO_INSUFICIENTE` |
-| 500 | `ERRO_INTERNO` |
-
-## Limitações conhecidas
-
-- Não há token: qualquer cliente pode enviar o `jogadorId` de outro jogador.
-- Partida abandonada não é finalizada e não conta nas estatísticas nem dá moedas.
-- O desafio diário não existe no back-end (`filtro=diario` devolve lista vazia).
-- A sala é consultada por polling; o WebSocket existe só para a partida.
+| 400 | `DADOS_INVALIDOS`,

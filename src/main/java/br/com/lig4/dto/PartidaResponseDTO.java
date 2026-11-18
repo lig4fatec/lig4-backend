@@ -1,5 +1,6 @@
 package br.com.lig4.dto;
 
+import br.com.lig4.domain.ModoJogo;
 import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.StatusPartida;
 
@@ -11,6 +12,7 @@ public record PartidaResponseDTO(
         JogadorResumoDTO jogadorDois,
         JogadorResumoDTO vencedor,
         StatusPartida status,
+        ModoJogo modo,
         Instant criadoEm,
         Instant finalizadoEm
 ) {
@@ -21,6 +23,7 @@ public record PartidaResponseDTO(
                 JogadorResumoDTO.from(partida.jogadorDois),
                 partida.vencedor != null ? JogadorResumoDTO.from(partida.vencedor) : null,
                 partida.status,
+                partida.modo,
                 partida.criadoEm,
                 partida.finalizadoEm
         );

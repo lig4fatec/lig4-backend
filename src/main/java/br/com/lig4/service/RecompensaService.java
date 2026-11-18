@@ -1,6 +1,7 @@
 package br.com.lig4.service;
 
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.domain.ModoJogo;
 import br.com.lig4.domain.Partida;
 import org.springframework.stereotype.Service;
 
@@ -8,20 +9,27 @@ import org.springframework.stereotype.Service;
 @Service
 public class RecompensaService {
 
-    public static final int MOEDAS_VITORIA = 50;
-    public static final int MOEDAS_DERROTA = 10; // vale também para empate
+    public static final int CLASSICO_VITORIA = 15;
+    public static final int CLASSICO_EMPATE = 5;
+    public static final int CLASSICO_DERROTA = 2;
+
+    public static final int CAOS_VITORIA = 30;
+    public static final int CAOS_EMPATE = 10;
+    public static final int CAOS_DERROTA = 5;
 
     /** Chame dentro da transação que finaliza a partida; os jogadores são salvos junto com ela. */
     public void conceder(Partida partida) {
+        boolean caos = partida.modo == ModoJogo.CAOS;
         if (partida.vencedor == null) {
-            partida.jogadorUm.moedas += MOEDAS_DERROTA;
-            partida.jogadorDois.moedas += MOEDAS_DERROTA;
+            int empate = caos ? CAOS_EMPATE : CLASSICO_EMPATE;
+            partida.jogadorUm.moedas += empate;
+            partida.jogadorDois.moedas += empate;
             return;
         }
         Jogador perdedor = partida.vencedor.id.equals(partida.jogadorUm.id)
                 ? partida.jogadorDois
                 : partida.jogadorUm;
-        partida.vencedor.moedas += MOEDAS_VITORIA;
-        perdedor.moedas += MOEDAS_DERROTA;
+        partida.vencedor.moedas += caos ? CAOS_VITORIA : CLASSICO_VITORIA;
+        perdedor.moedas += caos ? CAOS_DERROTA : CLASSICO_DERROTA;
     }
 }

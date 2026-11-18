@@ -33,7 +33,7 @@ class PartidaDaSalaTest extends ApiTestSupport {
     /** Cria a sala, coloca o convidado e inicia. Devolve {pin, partidaId}. */
     private String[] salaIniciada(long dono, long convidado) {
         Resposta criada = enviar("POST", "/salas",
-                "{\"jogadorId\":%d,\"serie\":3,\"cor\":\"blue\"}".formatted(dono));
+                "{\"jogadorId\":%d,\"modo\":\"CAOS\",\"cor\":\"blue\"}".formatted(dono));
         String pin = extrair(criada, "\"pin\"\\s*:\\s*\"(\\d{6})\"");
         assertEquals(200, enviar("POST", "/salas/entrar",
                 "{\"jogadorId\":%d,\"pin\":\"%s\",\"cor\":\"red\"}".formatted(convidado, pin)).status());
@@ -48,7 +48,7 @@ class PartidaDaSalaTest extends ApiTestSupport {
     }
 
     @Test
-    void estadoDaPartidaDaSalaTrazPinSerieECoresDaSala() {
+    void estadoDaPartidaDaSalaTrazPinModoECoresDaSala() {
         long dono = criarJogador("Vera");
         long convidado = criarJogador("Wagner");
         String[] sala = salaIniciada(dono, convidado);
@@ -57,7 +57,7 @@ class PartidaDaSalaTest extends ApiTestSupport {
 
         assertEquals(200, estado.status(), estado.corpo());
         assertTrue(estado.corpo().contains("\"pin\":\"" + sala[0] + "\""), estado.corpo());
-        assertTrue(estado.corpo().contains("\"serie\":3"), estado.corpo());
+        assertTrue(estado.corpo().contains("\"modo\":\"CAOS\""), estado.corpo());
         assertTrue(estado.corpo().contains("\"cor\":\"blue\""), estado.corpo());
         assertTrue(estado.corpo().contains("\"cor\":\"red\""), estado.corpo());
     }
@@ -73,6 +73,7 @@ class PartidaDaSalaTest extends ApiTestSupport {
 
         assertEquals(200, estado.status(), estado.corpo());
         assertFalse(estado.corpo().contains("\"pin\":\""), estado.corpo());
+        assertTrue(estado.corpo().contains("\"modo\":\"CLASSICO\""), estado.corpo());
     }
 
     @Test

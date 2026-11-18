@@ -2,6 +2,7 @@ package br.com.lig4.service;
 
 import br.com.lig4.domain.FaseSala;
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.domain.ModoJogo;
 import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.Sala;
 import br.com.lig4.domain.StatusPartida;
@@ -21,14 +22,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 @Service
 public class SalaService {
 
     private static final Pattern PIN = Pattern.compile("^\\d{6}$");
-    private static final Set<Integer> SERIES_VALIDAS = Set.of(1, 3, 5);
     private static final int TENTATIVAS_DE_PIN = 20;
 
     private final SalaRepository salaRepository;
@@ -46,15 +45,15 @@ public class SalaService {
 
     @Transactional
     public SalaResponseDTO criar(SalaCriarRequestDTO dto) {
-        int serie = dto.serie() == null ? 1 : dto.serie();
-        if (!SERIES_VALIDAS.contains(serie)) {
-            throw new SalaInvalidaException(CodigoErro.SERIE_INVALIDA, "A série deve ser 1, 3 ou 5");
+        ModoJogo modo = ModoJogo.de(dto.modo());
+        if (modo == null) {
+            throw new SalaInvalidaException(CodigoErro.MODO_INVALIDO, "O modo deve ser CLASSICO ou CAOS");
         }
 
         Sala sala = new Sala();
         sala.dono = buscarJogadorOuFalhar(dto.jogadorId());
         sala.corDono = dto.cor();
-        sala.serie = serie;
+        sala.modo = modo;
         sala.fase = FaseSala.AGUARDANDO;
         sala.pin = gerarPin();
         salaRepository.save(sala);
@@ -132,15 +131,14 @@ public class SalaService {
             throw new SalaInvalidaException(CodigoErro.SEM_CONVIDADO, "Aguarde o segundo jogador entrar na sala");
         }
 
-        sala.partida = novaPartida(sala.dono, sala.convidado);
+        sala.partida = novaPartida(sala.dono, sala.convidado, sala.modo);
         sala.fase = FaseSala.JOGANDO;
         return SalaResponseDTO.from(sala);
     }
 
     /**
      * Pede a próxima partida (revanche). Quando os dois pedem, começa uma nova partida com os mesmos
-     * jogadores, e quem começou a anterior passa a jogar em segundo. Se a série já foi decidida,
-     * a nova partida abre uma série nova, com o placar zerado.
+     * jogadores e o mesmo modo, e quem começou a anterior passa a jogar em segundo.
      */
     @Transactional
     public SalaResponseDTO revanche(String pin, SalaAcaoRequestDTO dto) {
@@ -162,11 +160,8 @@ public class SalaService {
         }
 
         if (sala.revancheDono && sala.revancheConvidado) {
-            if (sala.serieDecidida()) {
-                sala.zerarPlacar(); // série nova
-            }
             Partida anterior = sala.partida;
-            sala.partida = novaPartida(anterior.jogadorDois, anterior.jogadorUm);
+            sala.partida = novaPartida(anterior.jogadorDois, anterior.jogadorUm, sala.modo);
             sala.fase = FaseSala.JOGANDO;
             sala.revancheDono = false;
             sala.revancheConvidado = false;
@@ -200,10 +195,11 @@ public class SalaService {
         }
     }
 
-    private Partida novaPartida(Jogador primeiro, Jogador segundo) {
+    private Partida novaPartida(Jogador primeiro, Jogador segundo, ModoJogo modo) {
         Partida partida = new Partida();
         partida.jogadorUm = primeiro;
         partida.jogadorDois = segundo;
+        partida.modo = modo;
         partida.status = StatusPartida.EM_ANDAMENTO;
         return partidaRepository.save(partida);
     }

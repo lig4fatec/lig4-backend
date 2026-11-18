@@ -1,14 +1,17 @@
 package br.com.lig4.service;
 
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.domain.ModoJogo;
 import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.StatusPartida;
 import br.com.lig4.dto.PartidaFinalizarDTO;
 import br.com.lig4.dto.PartidaRequestDTO;
 import br.com.lig4.dto.PartidaResponseDTO;
+import br.com.lig4.exception.CodigoErro;
 import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.exception.PartidaInvalidaException;
 import br.com.lig4.exception.PartidaNotFoundException;
+import br.com.lig4.exception.SalaInvalidaException;
 import br.com.lig4.repository.JogadorRepository;
 import br.com.lig4.repository.PartidaRepository;
 import org.springframework.stereotype.Service;
@@ -50,12 +53,18 @@ public class PartidaService {
             throw new PartidaInvalidaException("Os dois jogadores da partida devem ser diferentes");
         }
 
+        ModoJogo modo = ModoJogo.de(dto.modo());
+        if (modo == null) {
+            throw new SalaInvalidaException(CodigoErro.MODO_INVALIDO, "O modo deve ser CLASSICO ou CAOS");
+        }
+
         Jogador jogadorUm = buscarJogadorOuFalhar(dto.jogadorUmId());
         Jogador jogadorDois = buscarJogadorOuFalhar(dto.jogadorDoisId());
 
         Partida partida = new Partida();
         partida.jogadorUm = jogadorUm;
         partida.jogadorDois = jogadorDois;
+        partida.modo = modo;
         partida.status = StatusPartida.EM_ANDAMENTO;
         partidaRepository.save(partida);
 

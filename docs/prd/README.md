@@ -34,6 +34,7 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0015](0015-perfil-estatisticas-e-moedas.md) | Perfil, estatísticas e moedas do jogador | Implementado |
 | [0016](0016-historico-de-partidas.md) | Histórico de partidas do jogador | Implementado |
 | [0017](0017-loja.md) | Loja: catálogo, compra e itens equipados | Implementado |
-| [0018](0018-placar-e-fim-da-serie.md) | Placar e fim da série (melhor de 3 e 5) | Implementado |
 | [0013](0013-publicacao-do-back-end.md) | Publicação do back-end | Implementado |
 | [0019](0019-presenca-e-logs-do-websocket.md) | Presença dos jogadores na partida e logs do WebSocket | Implementado |
+| [0018](0018-placar-e-fim-da-serie.md) | Placar e fim da série (melhor de 3 e 5) | Substituído pelo PRD-0020 |
+| [0020](0020-modo-de-jogo-e-moedas-por-modo.md) | Modo de jogo (Clássico e Caos), fim da série e moedas por modo | Implementado |

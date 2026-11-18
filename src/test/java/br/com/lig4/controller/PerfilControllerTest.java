@@ -103,8 +103,9 @@ class PerfilControllerTest extends ApiTestSupport {
 
         assertEquals(200, enviar("PUT", "/partidas/" + partida, "{\"vencedorId\":%d}".formatted(j1)).status());
 
-        esperarPerfil(j1, 1, 0, 550);
-        esperarPerfil(j2, 0, 1, 510);
+        // Clássico: vitória +15, derrota +2
+        esperarPerfil(j1, 1, 0, 515);
+        esperarPerfil(j2, 0, 1, 502);
     }
 
     @Test
@@ -115,8 +116,9 @@ class PerfilControllerTest extends ApiTestSupport {
 
         assertEquals(200, enviar("PUT", "/partidas/" + partida, "{}").status());
 
-        esperarPerfil(j1, 0, 0, 510);
-        esperarPerfil(j2, 0, 0, 510);
+        // Clássico: empate +5
+        esperarPerfil(j1, 0, 0, 505);
+        esperarPerfil(j2, 0, 0, 505);
     }
 
     @Test
@@ -133,10 +135,10 @@ class PerfilControllerTest extends ApiTestSupport {
         jogar(partida, j2, 1);
         assertEquals(201, jogar(partida, j1, 0).status());
 
-        esperarPerfil(j1, 1, 0, 550);
-        esperarPerfil(j2, 0, 1, 510);
+        esperarPerfil(j1, 1, 0, 515);
+        esperarPerfil(j2, 0, 1, 502);
         // jogada depois do fim é recusada e não credita de novo
         assertEquals(409, jogar(partida, j2, 3).status());
-        esperarPerfil(j1, 1, 0, 550);
+        esperarPerfil(j1, 1, 0, 515);
     }
 }

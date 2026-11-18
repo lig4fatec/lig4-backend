@@ -1,7 +1,7 @@
 # PRD-0018. Placar e fim da série (melhor de 3 e 5)
 
 - **Data:** 2026-11-01
-- **Estado:** Implementado
+- **Estado:** Substituído pelo PRD-0020 (a série foi removida do jogo)
 - **Desenvolvedor** Thamires
 
 ## Objetivo
