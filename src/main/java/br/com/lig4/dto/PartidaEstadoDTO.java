@@ -1,13 +1,12 @@
 package br.com.lig4.dto;
 
+import br.com.lig4.domain.ModoJogo;
 import br.com.lig4.domain.StatusPartida;
 import br.com.lig4.engine.StatusJogo;
 
-import java.util.Map;
-
 /**
- * Situação da partida. Quando ela nasceu de uma sala, vêm também o PIN, a série e o placar, e a cor
- * de cada jogador passa a ser a escolhida na sala. Sem sala, pin, serie e placar são nulos e a cor é a do perfil.
+ * Situação da partida. Quando ela nasceu de uma sala, vem também o PIN, e a cor de cada jogador
+ * passa a ser a escolhida na sala. Sem sala, o pin é nulo e a cor é a do perfil.
  */
 public record PartidaEstadoDTO(
         Long partidaId,
@@ -20,9 +19,6 @@ public record PartidaEstadoDTO(
         int totalJogadas,
         String[][] tabuleiro,
         String pin,
-        Integer serie,
-        /** Vitórias na série por id de jogador. */
-        Map<Long, Integer> placar,
-        boolean serieEncerrada
+        ModoJogo modo
 ) {
 }

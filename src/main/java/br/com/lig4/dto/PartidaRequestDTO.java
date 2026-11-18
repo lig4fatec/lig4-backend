@@ -8,6 +8,8 @@ public record PartidaRequestDTO(
         Long jogadorUmId,
 
         @NotNull(message = "O id do jogador 2 é obrigatório")
-        Long jogadorDoisId
+        Long jogadorDoisId,
+
+        String modo
 ) {
 }

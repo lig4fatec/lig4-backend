@@ -1,6 +1,7 @@
 package br.com.lig4.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ class SalaControllerTest extends ApiTestSupport {
 
     private Resposta criarSala(long jogador, String cor) {
         return enviar("POST", "/salas",
-                "{\"jogadorId\":%d,\"serie\":3,\"cor\":\"%s\"}".formatted(jogador, cor));
+                "{\"jogadorId\":%d,\"cor\":\"%s\"}".formatted(jogador, cor));
     }
 
     private Resposta entrar(String pin, long jogador, String cor) {
@@ -51,7 +52,7 @@ class SalaControllerTest extends ApiTestSupport {
 
         assertEquals(201, criada.status(), criada.corpo());
         assertTrue(criada.corpo().contains("\"fase\":\"AGUARDANDO\""));
-        assertTrue(criada.corpo().contains("\"serie\":3"));
+        assertTrue(criada.corpo().contains("\"modo\":\"CLASSICO\""));
         assertTrue(criada.corpo().contains("\"cor\":\"blue\""));
 
         Resposta consulta = get("/salas/" + pinDe(criada));
@@ -120,11 +121,34 @@ class SalaControllerTest extends ApiTestSupport {
     }
 
     @Test
-    void serieInvalidaEhRecusada() {
+    void modoCaosEhAceito() {
         long jogador = criarJogador("Nico");
+        Resposta criada = enviar("POST", "/salas",
+                "{\"jogadorId\":%d,\"modo\":\"CAOS\",\"cor\":\"blue\"}".formatted(jogador));
+
+        assertEquals(201, criada.status(), criada.corpo());
+        assertTrue(criada.corpo().contains("\"modo\":\"CAOS\""), criada.corpo());
+        assertTrue(get("/salas/" + pinDe(criada)).corpo().contains("\"modo\":\"CAOS\""));
+    }
+
+    @Test
+    void modoInvalidoEhRecusado() {
+        long jogador = criarJogador("Nina");
         esperar(enviar("POST", "/salas",
-                "{\"jogadorId\":%d,\"serie\":2,\"cor\":\"blue\"}".formatted(jogador)),
-                400, "SERIE_INVALIDA");
+                "{\"jogadorId\":%d,\"modo\":\"SERIE\",\"cor\":\"blue\"}".formatted(jogador)),
+                400, "MODO_INVALIDO");
+    }
+
+    @Test
+    void serieEnviadaPeloFrontAntigoEhIgnoradaENaoVoltaNaResposta() {
+        long jogador = criarJogador("Nuno");
+        Resposta criada = enviar("POST", "/salas",
+                "{\"jogadorId\":%d,\"serie\":3,\"cor\":\"blue\"}".formatted(jogador));
+
+        assertEquals(201, criada.status(), criada.corpo());
+        assertTrue(criada.corpo().contains("\"modo\":\"CLASSICO\""), criada.corpo());
+        assertFalse(criada.corpo().contains("\"serie\""), criada.corpo());
+        assertFalse(criada.corpo().contains("\"placar\""), criada.corpo());
     }
 
     @Test

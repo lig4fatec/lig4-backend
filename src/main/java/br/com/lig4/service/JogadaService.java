@@ -92,16 +92,10 @@ public class JogadaService {
                 partida.vencedor = jogador;
                 vencedorId = jogador.id;
             }
-            // moedas de vitória, derrota ou empate (a partida só termina uma vez)
+            // moedas de vitória, derrota ou empate, conforme o modo (a partida só termina uma vez)
             recompensas.conceder(partida);
-            // a sala de origem também termina e soma a vitória no placar da série
-            Long ganhadorId = partida.vencedor == null ? null : partida.vencedor.id;
-            salaRepository.findByPartidaId(partidaId).ifPresent(sala -> {
-                sala.fase = FaseSala.ENCERRADA;
-                if (ganhadorId != null) {
-                    sala.registrarVitoria(ganhadorId);
-                }
-            });
+            // a sala de origem também termina
+            salaRepository.findByPartidaId(partidaId).ifPresent(sala -> sala.fase = FaseSala.ENCERRADA);
         }
 
         return new JogadaResponseDTO(
@@ -161,9 +155,7 @@ public class JogadaService {
                 jogadas.size(),
                 jogo.getTabuleiro().comoMatriz(),
                 sala == null ? null : sala.pin,
-                sala == null ? null : sala.serie,
-                sala == null ? null : sala.placar(),
-                sala != null && sala.serieDecidida());
+                partida.modo);
     }
 
     @Transactional(readOnly = true)
