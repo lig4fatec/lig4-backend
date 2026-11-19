@@ -6,7 +6,7 @@
 
 ## Objetivo
 
-Atender as decisões de 12 a 17/11 com o front-end: a sala passa a ter um modo (Clássico ou Caos) no lugar da série, e as moedas do fim da partida dependem do modo.
+A sala passa a ter um modo (Clássico ou Caos) no lugar da série, e as moedas do fim da partida dependem do modo.
 
 ## Requisitos
 

@@ -48,14 +48,14 @@ class SalaRevancheTest extends ApiTestSupport {
         assertTrue(r.corpo().contains("\"codigo\":\"" + codigo + "\""), r.corpo());
     }
 
-    /** Sala iniciada (dono blue, convidado red). Devolve {pin, partidaId}. */
+    /** Sala em andamento (dono blue, convidado red; os dois marcaram pronto). Devolve {pin, partidaId}. */
     private String[] salaIniciada(long dono, long convidado) {
         Resposta criada = enviar("POST", "/salas",
-                "{\"jogadorId\":%d,\"serie\":3,\"cor\":\"blue\"}".formatted(dono));
+                "{\"jogadorId\":%d,\"cor\":\"blue\"}".formatted(dono));
         String pin = extrair(criada, "\"pin\"\\s*:\\s*\"(\\d{6})\"");
         assertEquals(200, enviar("POST", "/salas/entrar",
                 "{\"jogadorId\":%d,\"pin\":\"%s\",\"cor\":\"red\"}".formatted(convidado, pin)).status());
-        Resposta iniciada = enviar("POST", "/salas/" + pin + "/iniciar", "{\"jogadorId\":%d}".formatted(dono));
+        Resposta iniciada = marcarProntos(pin, dono, convidado);
         assertEquals(200, iniciada.status(), iniciada.corpo());
         return new String[]{pin, partidaIdDe(iniciada)};
     }

@@ -40,13 +40,15 @@ Moedas: cada jogador começa com 500. Ao fim de cada partida: no Clássico, vit�
 | `POST /salas/entrar` | `{jogadorId, pin, cor}` | sala (quem já está nela recebe a situação atual) |
 | `GET /salas/{pin}` | | sala (o front consulta a cada 2 s) |
 | `PUT /salas/{pin}/cor` | `{jogadorId, cor}` | sala |
-| `POST /salas/{pin}/iniciar` | `{jogadorId}` (só o dono, com o convidado na sala) | sala em `JOGANDO` |
+| `PUT /salas/{pin}/pronto` | `{jogadorId, pronto (true ou false)}` | sala (quando os dois estão prontos, já vem em `JOGANDO`) |
 | `POST /salas/{pin}/revanche` | `{jogadorId}` | sala |
 | `POST /salas/{pin}/sair` | `{jogadorId}` | 204 |
 
-Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe}`.
+Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, prontoDono, prontoConvidado}`.
 
 - `fase`: `AGUARDANDO`, `JOGANDO` ou `ENCERRADA`.
+- A partida só começa quando o dono e o convidado marcam "pronto" (`PUT /salas/{pin}/pronto`): quando o segundo marca, o back cria a partida sozinho, a sala vira `JOGANDO` e `partidaId` vem preenchido. Não existe mais `POST /salas/{pin}/iniciar`.
+- O "pronto" só vale enquanto a sala está em `AGUARDANDO` (depois, `FASE_INVALIDA`). Quem troca de cor perde o próprio "pronto", e quando o convidado sai os dois voltam a falso.
 - A primeira partida começa pelo dono. A cada revanche, quem começa alterna.
 - Modo: `CLASSICO` ou `CAOS` (aceita também minúsculas e sem acento). Outro valor devolve `MODO_INVALIDO`. A série e o placar foram removidos; um `serie` enviado por um front antigo é ignorado.
 - A revanche mantém o modo da sala.
@@ -78,4 +80,16 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe}`.
 
 | Status | Códigos |
 |---|---|
-| 400 | `DADOS_INVALIDOS`,
+| 400 | `DADOS_INVALIDOS`, `REQUISICAO_INVALIDA`, `EMAIL_INVALIDO`, `SENHA_INVALIDA`, `NICK_INVALIDO`, `COR_INVALIDA`, `FILTRO_INVALIDO`, `PIN_INVALIDO`, `MODO_INVALIDO`, `PARTIDA_INVALIDA`, `COLUNA_INVALIDA`, `COLUNA_CHEIA` |
+| 401 | `CREDENCIAIS_INVALIDAS` |
+| 403 | `SEM_PERMISSAO` |
+| 404 | `JOGADOR_NAO_ENCONTRADO`, `PARTIDA_NAO_ENCONTRADA`, `PIN_NAO_ENCONTRADO`, `ITEM_INEXISTENTE` |
+| 409 | `EMAIL_JA_CADASTRADO`, `SALA_CHEIA`, `COR_JA_ESCOLHIDA`, `SEM_CONVIDADO`, `FASE_INVALIDA`, `JOGO_ENCERRADO`, `FORA_DO_TURNO`, `ITEM_NAO_POSSUIDO`, `ITEM_JA_POSSUIDO`, `SALDO_INSUFICIENTE` |
+| 500 | `ERRO_INTERNO` |
+
+## Limitações conhecidas
+
+- Não há token: qualquer cliente pode enviar o `jogadorId` de outro jogador.
+- Partida abandonada não é finalizada e não conta nas estatísticas nem dá moedas.
+- O desafio diário não existe no back-end (`filtro=diario` devolve lista vazia).
+- A sala é consultada por polling; o WebSocket existe só para a partida.

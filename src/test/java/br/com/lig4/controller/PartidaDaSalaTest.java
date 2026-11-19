@@ -30,14 +30,14 @@ class PartidaDaSalaTest extends ApiTestSupport {
         return m.group(1);
     }
 
-    /** Cria a sala, coloca o convidado e inicia. Devolve {pin, partidaId}. */
+    /** Cria a sala, coloca o convidado e os dois marcam pronto. Devolve {pin, partidaId}. */
     private String[] salaIniciada(long dono, long convidado) {
         Resposta criada = enviar("POST", "/salas",
                 "{\"jogadorId\":%d,\"modo\":\"CAOS\",\"cor\":\"blue\"}".formatted(dono));
         String pin = extrair(criada, "\"pin\"\\s*:\\s*\"(\\d{6})\"");
         assertEquals(200, enviar("POST", "/salas/entrar",
                 "{\"jogadorId\":%d,\"pin\":\"%s\",\"cor\":\"red\"}".formatted(convidado, pin)).status());
-        Resposta iniciada = enviar("POST", "/salas/" + pin + "/iniciar", "{\"jogadorId\":%d}".formatted(dono));
+        Resposta iniciada = marcarProntos(pin, dono, convidado);
         assertEquals(200, iniciada.status(), iniciada.corpo());
         return new String[]{pin, extrair(iniciada, "\"partidaId\"\\s*:\\s*(\\d+)")};
     }
