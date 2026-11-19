@@ -43,6 +43,22 @@ public class Partida {
     @Column(nullable = false, length = 20)
     public ModoJogo modo = ModoJogo.CLASSICO;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "motivo_fim", length = 20)
+    public MotivoFim motivoFim;
+
+    /** Quem propôs um empate que o adversário ainda não respondeu. */
+    @ManyToOne
+    @JoinColumn(name = "empate_pendente_de_id")
+    public Jogador empatePendenteDe;
+
+    /** Cada jogador pode propor empate uma vez por partida. */
+    @Column(name = "empate_usado_um", nullable = false)
+    public boolean empateUsadoUm;
+
+    @Column(name = "empate_usado_dois", nullable = false)
+    public boolean empateUsadoDois;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 

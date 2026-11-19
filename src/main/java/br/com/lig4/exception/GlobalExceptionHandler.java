@@ -50,6 +50,11 @@ public class GlobalExceptionHandler {
         return resposta(HttpStatus.BAD_REQUEST, CodigoErro.de(e), e.getMessage());
     }
 
+    @ExceptionHandler(AcaoPartidaInvalidaException.class)
+    public ResponseEntity<ErroResponse> acaoInvalida(AcaoPartidaInvalidaException e) {
+        return resposta(HttpStatus.CONFLICT, e.codigo(), e.getMessage());
+    }
+
     @ExceptionHandler(SalaInvalidaException.class)
     public ResponseEntity<ErroResponse> salaInvalida(SalaInvalidaException e) {
         HttpStatus status = switch (e.codigo()) {

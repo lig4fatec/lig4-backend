@@ -1,8 +1,11 @@
 package br.com.lig4.dto;
 
 import br.com.lig4.domain.ModoJogo;
+import br.com.lig4.domain.MotivoFim;
 import br.com.lig4.domain.StatusPartida;
 import br.com.lig4.engine.StatusJogo;
+
+import java.util.List;
 
 /**
  * Situação da partida. Quando ela nasceu de uma sala, vem também o PIN, e a cor de cada jogador
@@ -19,6 +22,12 @@ public record PartidaEstadoDTO(
         int totalJogadas,
         String[][] tabuleiro,
         String pin,
-        ModoJogo modo
+        ModoJogo modo,
+        /** Como a partida terminou; nulo enquanto ela está em andamento. */
+        MotivoFim motivoFim,
+        /** Quem propôs um empate que ainda não foi respondido (nulo se não há proposta). */
+        Long empatePropostoPor,
+        /** Ids dos jogadores que já usaram a proposta de empate desta partida. */
+        List<Long> empatesUsados
 ) {
 }

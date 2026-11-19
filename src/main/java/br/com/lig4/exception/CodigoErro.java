@@ -33,6 +33,10 @@ public enum CodigoErro {
     SEM_PERMISSAO,
     SEM_CONVIDADO,
     FASE_INVALIDA,
+    // desistência e empate
+    EMPATE_JA_PROPOSTO,
+    EMPATE_PENDENTE,
+    SEM_PROPOSTA_DE_EMPATE,
     // motivos de jogada inválida (mesmos nomes de JogadaInvalidaException.Motivo)
     JOGO_ENCERRADO,
     FORA_DO_TURNO,
@@ -63,6 +67,9 @@ public enum CodigoErro {
         }
         if (e instanceof SalaInvalidaException sala) {
             return sala.codigo();
+        }
+        if (e instanceof AcaoPartidaInvalidaException acao) {
+            return acao.codigo();
         }
         if (e instanceof LojaInvalidaException loja) {
             return loja.codigo();
