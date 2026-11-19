@@ -3,6 +3,7 @@ package br.com.lig4.service;
 import br.com.lig4.domain.FaseSala;
 import br.com.lig4.domain.JogadaRegistro;
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.domain.MotivoFim;
 import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.Sala;
 import br.com.lig4.domain.StatusPartida;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -81,6 +83,11 @@ public class JogadaService {
         registro.linha = jogada.linha();
         jogadaRepository.save(registro);
 
+        // jogar depois de receber uma proposta de empate é recusá-la
+        if (partida.empatePendenteDe != null && !partida.empatePendenteDe.id.equals(jogador.id)) {
+            partida.empatePendenteDe = null;
+        }
+
         Long vencedorId = null;
         Long proximoJogadorId = null;
         if (jogo.getStatus() == StatusJogo.EM_ANDAMENTO) {
@@ -88,11 +95,15 @@ public class JogadaService {
         } else {
             partida.status = StatusPartida.FINALIZADA;
             partida.finalizadoEm = Instant.now();
+            partida.empatePendenteDe = null;
             if (jogo.getStatus() == StatusJogo.VENCEDOR) {
                 partida.vencedor = jogador;
+                partida.motivoFim = MotivoFim.VITORIA;
                 vencedorId = jogador.id;
+            } else {
+                partida.motivoFim = MotivoFim.TABULEIRO_CHEIO;
             }
-            // moedas de vitória, derrota ou empate, conforme o modo (a partida só termina uma vez)
+            // moedas de vitória, derrota ou empate (a partida só termina uma vez)
             recompensas.conceder(partida);
             // a sala de origem também termina
             salaRepository.findByPartidaId(partidaId).ifPresent(sala -> sala.fase = FaseSala.ENCERRADA);
@@ -131,11 +142,30 @@ public class JogadaService {
             jogo.jogar(discoDe(partida, j.jogador.id), j.coluna);
         }
 
-        Long vencedorId = jogo.getStatus() == StatusJogo.VENCEDOR
+        StatusJogo resultado = jogo.getStatus();
+        Long vencedorId = resultado == StatusJogo.VENCEDOR
                 ? jogadorDe(partida, jogo.getVencedor())
                 : null;
-        Long proximoJogadorId = jogo.getStatus() == StatusJogo.EM_ANDAMENTO
+        Long proximoJogadorId = resultado == StatusJogo.EM_ANDAMENTO
                 ? jogadorDe(partida, jogo.getTurno())
+                : null;
+
+        // Desistência e empate combinado terminam a partida sem a última jogada: vale o que foi gravado nela.
+        if (partida.status == StatusPartida.FINALIZADA) {
+            vencedorId = partida.vencedor == null ? null : partida.vencedor.id;
+            resultado = partida.vencedor == null ? StatusJogo.EMPATE : StatusJogo.VENCEDOR;
+            proximoJogadorId = null;
+        }
+
+        List<Long> empatesUsados = new ArrayList<>();
+        if (partida.empateUsadoUm) {
+            empatesUsados.add(partida.jogadorUm.id);
+        }
+        if (partida.empateUsadoDois) {
+            empatesUsados.add(partida.jogadorDois.id);
+        }
+        Long empatePropostoPor = partida.status == StatusPartida.EM_ANDAMENTO && partida.empatePendenteDe != null
+                ? partida.empatePendenteDe.id
                 : null;
 
         // Na sala, a cor de cada jogador é a escolhida lá. Quem começa alterna a cada revanche,
@@ -149,13 +179,16 @@ public class JogadaService {
                 jogadorUm,
                 jogadorDois,
                 partida.status,
-                jogo.getStatus(),
+                resultado,
                 vencedorId,
                 proximoJogadorId,
                 jogadas.size(),
                 jogo.getTabuleiro().comoMatriz(),
                 sala == null ? null : sala.pin,
-                partida.modo);
+                partida.modo,
+                partida.motivoFim,
+                empatePropostoPor,
+                empatesUsados);
     }
 
     @Transactional(readOnly = true)

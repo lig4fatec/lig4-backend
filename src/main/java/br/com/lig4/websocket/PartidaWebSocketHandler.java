@@ -2,12 +2,15 @@ package br.com.lig4.websocket;
 
 import br.com.lig4.dto.JogadaRequestDTO;
 import br.com.lig4.dto.JogadaResponseDTO;
+import br.com.lig4.dto.PartidaEstadoDTO;
 import br.com.lig4.engine.JogadaInvalidaException;
+import br.com.lig4.exception.AcaoPartidaInvalidaException;
 import br.com.lig4.exception.CodigoErro;
 import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.exception.PartidaInvalidaException;
 import br.com.lig4.exception.PartidaNotFoundException;
 import br.com.lig4.service.JogadaService;
+import br.com.lig4.service.PartidaAcaoService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
@@ -49,11 +52,14 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     }
 
     private final JogadaService jogadaService;
+    private final PartidaAcaoService acaoService;
     private final ObjectMapper mapper;
     private final Map<Long, Set<WebSocketSession>> salas = new ConcurrentHashMap<>();
 
-    public PartidaWebSocketHandler(JogadaService jogadaService, ObjectMapper mapper) {
+    public PartidaWebSocketHandler(JogadaService jogadaService, PartidaAcaoService acaoService,
+                                   ObjectMapper mapper) {
         this.jogadaService = jogadaService;
+        this.acaoService = acaoService;
         this.mapper = mapper;
     }
 
@@ -101,6 +107,22 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
                     log.info("Jogada aceita: partida={} jogador={} coluna={} resultado={}",
                             partidaId, jogadorId, comando.coluna(), resultado.resultado());
                     transmitir(partidaId, new Mensagem("JOGADA", resultado, null));
+                }
+                case "DESISTIR" -> {
+                    transmitirEstado(partidaId, acaoService.desistir(partidaId, jogadorId));
+                    log.info("Desistência: partida={} jogador={}", partidaId, jogadorId);
+                }
+                case "PROPOR_EMPATE" -> {
+                    transmitirEstado(partidaId, acaoService.proporEmpate(partidaId, jogadorId));
+                    log.info("Empate proposto: partida={} jogador={}", partidaId, jogadorId);
+                }
+                case "ACEITAR_EMPATE" -> {
+                    transmitirEstado(partidaId, acaoService.aceitarEmpate(partidaId, jogadorId));
+                    log.info("Empate aceito: partida={} jogador={}", partidaId, jogadorId);
+                }
+                case "RECUSAR_EMPATE" -> {
+                    transmitirEstado(partidaId, acaoService.recusarEmpate(partidaId, jogadorId));
+                    log.info("Empate recusado: partida={} jogador={}", partidaId, jogadorId);
                 }
                 case "ESTADO" -> enviar(session,
                         new Mensagem("ESTADO", jogadaService.estado(partidaId), null));
@@ -162,6 +184,11 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
         return comando;
     }
 
+    /** Envia o estado da partida aos dois jogadores conectados (também usado pelos endpoints HTTP). */
+    public void transmitirEstado(Long partidaId, PartidaEstadoDTO estado) {
+        transmitir(partidaId, new Mensagem("ESTADO", estado, null));
+    }
+
     private void transmitir(Long partidaId, Mensagem mensagem) {
         Set<WebSocketSession> sala = salas.get(partidaId);
         if (sala == null) {
@@ -193,6 +220,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     private String mensagemDe(RuntimeException e) {
         if (e instanceof JogadaInvalidaException
                 || e instanceof PartidaInvalidaException
+                || e instanceof AcaoPartidaInvalidaException
                 || e instanceof PartidaNotFoundException
                 || e instanceof JogadorNotFoundException) {
             return e.getMessage();

@@ -2,6 +2,7 @@ package br.com.lig4.service;
 
 import br.com.lig4.domain.Jogador;
 import br.com.lig4.domain.ModoJogo;
+import br.com.lig4.domain.MotivoFim;
 import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.StatusPartida;
 import br.com.lig4.dto.PartidaFinalizarDTO;
@@ -89,6 +90,8 @@ public class PartidaService {
         }
 
         partida.status = StatusPartida.FINALIZADA;
+        partida.motivoFim = partida.vencedor != null ? MotivoFim.VITORIA : MotivoFim.TABULEIRO_CHEIO;
+        partida.empatePendenteDe = null;
         partida.finalizadoEm = Instant.now();
         recompensas.conceder(partida);
 

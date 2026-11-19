@@ -58,11 +58,23 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 
 | Método e rota | Corpo | Resposta |
 |---|---|---|
-| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, modo}` |
+| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, modo, motivoFim, empatePropostoPor, empatesUsados}` |
 | `POST /partidas/{id}/jogadas` | `{jogadorId, coluna (0 a 6)}` | 201, jogada com o tabuleiro novo |
 | `GET /partidas/{id}/jogadas` | | jogadas em ordem |
+| `POST /partidas/{id}/desistir` | `{jogadorId}` | estado (o adversário vence) |
+| `POST /partidas/{id}/empate` | `{jogadorId}` | estado (propõe empate) |
+| `POST /partidas/{id}/empate/aceitar` | `{jogadorId}` | estado (partida empatada) |
+| `POST /partidas/{id}/empate/recusar` | `{jogadorId}` | estado (a partida continua) |
 
 `pin` só vem quando a partida nasceu de uma sala. `POST /partidas` aceita `modo` (`CLASSICO` por padrão). Também existem `GET/POST /partidas`, `GET /partidas/{id}`, `PUT /partidas/{id}` (finalizar) e `DELETE /partidas/{id}`.
+
+**Como a partida terminou (`motivoFim`):** nulo enquanto está em andamento; depois `VITORIA` (quatro peças), `TABULEIRO_CHEIO` (empate sem vencedor), `DESISTENCIA`, `EMPATE_ACORDADO` ou `TEMPO` (reservado para o relógio da partida).
+
+**Desistência:** quem desiste perde; o adversário vence e cada um recebe as moedas de vitória e de derrota do modo. Depois disso a partida e a sala ficam `FINALIZADA` e `ENCERRADA`.
+
+**Proposta de empate:** cada jogador pode propor uma vez por partida (`EMPATE_JA_PROPOSTO` na segunda) e só uma proposta fica aberta por vez (`EMPATE_PENDENTE`). Enquanto aberta, o estado traz `empatePropostoPor` com o id de quem propôs. O adversário aceita (a partida termina em `EMPATE` com `motivoFim` `EMPATE_ACORDADO` e moedas de empate) ou recusa (a proposta some e a partida continua). Se o adversário jogar sem responder, vale como recusa. Aceitar ou recusar sem proposta do adversário devolve `SEM_PROPOSTA_DE_EMPATE`. `empatesUsados` lista os ids que já gastaram a proposta, para o front desabilitar o botão.
+
+Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP fazem o mesmo e também avisam quem está conectado.
 
 ## WebSocket da partida
 
@@ -72,6 +84,8 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 |---|---|
 | Servidor → cliente, ao conectar | `{"tipo":"ESTADO","dados":{...estado...}}` |
 | Cliente → servidor | `{"tipo":"JOGAR","coluna":3}` ou `{"tipo":"ESTADO"}` |
+| Cliente → servidor | `{"tipo":"DESISTIR"}`, `{"tipo":"PROPOR_EMPATE"}`, `{"tipo":"ACEITAR_EMPATE"}` ou `{"tipo":"RECUSAR_EMPATE"}` |
+| Servidor → os dois, depois de desistir ou de uma ação de empate | `{"tipo":"ESTADO","dados":{...estado...}}` |
 | Servidor → os dois | `{"tipo":"JOGADA","dados":{...jogada...}}` |
 | Servidor → quem errou | `{"tipo":"ERRO","codigo":"...","mensagem":"..."}` |
 | Servidor → os conectados, ao conectar ou desconectar alguém | `{"tipo":"PRESENCA","dados":{"conectados":[12,15]}}` |
@@ -84,7 +98,7 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 | 401 | `CREDENCIAIS_INVALIDAS` |
 | 403 | `SEM_PERMISSAO` |
 | 404 | `JOGADOR_NAO_ENCONTRADO`, `PARTIDA_NAO_ENCONTRADA`, `PIN_NAO_ENCONTRADO`, `ITEM_INEXISTENTE` |
-| 409 | `EMAIL_JA_CADASTRADO`, `SALA_CHEIA`, `COR_JA_ESCOLHIDA`, `SEM_CONVIDADO`, `FASE_INVALIDA`, `JOGO_ENCERRADO`, `FORA_DO_TURNO`, `ITEM_NAO_POSSUIDO`, `ITEM_JA_POSSUIDO`, `SALDO_INSUFICIENTE` |
+| 409 | `EMAIL_JA_CADASTRADO`, `SALA_CHEIA`, `COR_JA_ESCOLHIDA`, `SEM_CONVIDADO`, `FASE_INVALIDA`, `JOGO_ENCERRADO`, `FORA_DO_TURNO`, `EMPATE_JA_PROPOSTO`, `EMPATE_PENDENTE`, `SEM_PROPOSTA_DE_EMPATE`, `ITEM_NAO_POSSUIDO`, `ITEM_JA_POSSUIDO`, `SALDO_INSUFICIENTE` |
 | 500 | `ERRO_INTERNO` |
 
 ## Limitações conhecidas
