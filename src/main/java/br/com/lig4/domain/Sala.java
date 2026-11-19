@@ -58,6 +58,13 @@ public class Sala {
     @Column(name = "revanche_convidado", nullable = false)
     public boolean revancheConvidado;
 
+    /** "Pronto" no lobby. Quando os dois marcam, a partida começa e as marcas voltam a falso. */
+    @Column(name = "pronto_dono", nullable = false)
+    public boolean prontoDono;
+
+    @Column(name = "pronto_convidado", nullable = false)
+    public boolean prontoConvidado;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 

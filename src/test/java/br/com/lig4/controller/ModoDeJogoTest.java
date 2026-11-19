@@ -40,14 +40,14 @@ class ModoDeJogoTest extends ApiTestSupport {
         assertTrue(r.corpo().contains("\"moedas\":" + moedas), r.corpo());
     }
 
-    /** Sala no modo pedido, iniciada (dono blue, convidado red). Devolve {pin, partidaId}. */
+    /** Sala no modo pedido, em andamento (dono blue, convidado red; os dois marcaram pronto). Devolve {pin, partidaId}. */
     private String[] salaIniciada(String modo, long dono, long convidado) {
         Resposta criada = enviar("POST", "/salas",
                 "{\"jogadorId\":%d,\"modo\":\"%s\",\"cor\":\"blue\"}".formatted(dono, modo));
         String pin = extrair(criada, "\"pin\"\\s*:\\s*\"(\\d{6})\"");
         assertEquals(200, enviar("POST", "/salas/entrar",
                 "{\"jogadorId\":%d,\"pin\":\"%s\",\"cor\":\"red\"}".formatted(convidado, pin)).status());
-        Resposta iniciada = enviar("POST", "/salas/" + pin + "/iniciar", "{\"jogadorId\":%d}".formatted(dono));
+        Resposta iniciada = marcarProntos(pin, dono, convidado);
         assertEquals(200, iniciada.status(), iniciada.corpo());
         return new String[]{pin, extrair(iniciada, "\"partidaId\"\\s*:\\s*(\\d+)")};
     }

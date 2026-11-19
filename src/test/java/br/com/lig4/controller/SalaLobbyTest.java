@@ -32,7 +32,7 @@ class SalaLobbyTest extends ApiTestSupport {
 
     private String criarSala(long dono, String cor) {
         Resposta r = enviar("POST", "/salas",
-                "{\"jogadorId\":%d,\"serie\":1,\"cor\":\"%s\"}".formatted(dono, cor));
+                "{\"jogadorId\":%d,\"cor\":\"%s\"}".formatted(dono, cor));
         assertEquals(201, r.status(), r.corpo());
         return pinDe(r);
     }
@@ -45,10 +45,6 @@ class SalaLobbyTest extends ApiTestSupport {
     private Resposta trocarCor(String pin, long jogador, String cor) {
         return enviar("PUT", "/salas/" + pin + "/cor",
                 "{\"jogadorId\":%d,\"cor\":\"%s\"}".formatted(jogador, cor));
-    }
-
-    private Resposta iniciar(String pin, long jogador) {
-        return enviar("POST", "/salas/" + pin + "/iniciar", "{\"jogadorId\":%d}".formatted(jogador));
     }
 
     private Resposta sair(String pin, long jogador) {
@@ -99,55 +95,11 @@ class SalaLobbyTest extends ApiTestSupport {
     }
 
     @Test
-    void soODonoPodeIniciar() {
-        long dono = criarJogador("Gina");
-        long convidado = criarJogador("Hector");
-        String pin = salaCompleta(dono, convidado);
-
-        esperar(iniciar(pin, convidado), 403, "SEM_PERMISSAO");
-    }
-
-    @Test
-    void naoIniciaSemConvidado() {
-        long dono = criarJogador("Ivo");
-        String pin = criarSala(dono, "blue");
-
-        esperar(iniciar(pin, dono), 409, "SEM_CONVIDADO");
-    }
-
-    @Test
-    void deveIniciarACriarAPartida() {
-        long dono = criarJogador("Joana");
-        long convidado = criarJogador("Kleber");
-        String pin = salaCompleta(dono, convidado);
-
-        Resposta r = iniciar(pin, dono);
-
-        assertEquals(200, r.status(), r.corpo());
-        assertTrue(r.corpo().contains("\"fase\":\"JOGANDO\""));
-        Matcher m = Pattern.compile("\"partidaId\"\\s*:\\s*(\\d+)").matcher(r.corpo());
-        assertTrue(m.find(), r.corpo());
-
-        Resposta estado = get("/partidas/" + m.group(1) + "/estado");
-        assertEquals(200, estado.status(), estado.corpo());
-    }
-
-    @Test
-    void naoIniciaDuasVezes() {
-        long dono = criarJogador("Lara");
-        long convidado = criarJogador("Mauro");
-        String pin = salaCompleta(dono, convidado);
-        assertEquals(200, iniciar(pin, dono).status());
-
-        esperar(iniciar(pin, dono), 409, "FASE_INVALIDA");
-    }
-
-    @Test
-    void naoTrocaCorDepoisDeIniciar() {
+    void naoTrocaCorDepoisDeComecar() {
         long dono = criarJogador("Nina");
         long convidado = criarJogador("Otto");
         String pin = salaCompleta(dono, convidado);
-        assertEquals(200, iniciar(pin, dono).status());
+        assertEquals(200, marcarProntos(pin, dono, convidado).status());
 
         esperar(trocarCor(pin, dono, "green"), 409, "FASE_INVALIDA");
     }

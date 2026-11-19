@@ -4,6 +4,7 @@ import br.com.lig4.dto.SalaAcaoRequestDTO;
 import br.com.lig4.dto.SalaCorRequestDTO;
 import br.com.lig4.dto.SalaCriarRequestDTO;
 import br.com.lig4.dto.SalaEntrarRequestDTO;
+import br.com.lig4.dto.SalaProntoRequestDTO;
 import br.com.lig4.dto.SalaResponseDTO;
 import br.com.lig4.service.SalaService;
 import jakarta.validation.Valid;
@@ -49,9 +50,9 @@ public class SalaController {
         return service.trocarCor(pin, dto);
     }
 
-    @PostMapping("/{pin}/iniciar")
-    public SalaResponseDTO iniciar(@PathVariable String pin, @Valid @RequestBody SalaAcaoRequestDTO dto) {
-        return service.iniciar(pin, dto);
+    @PutMapping("/{pin}/pronto")
+    public SalaResponseDTO pronto(@PathVariable String pin, @Valid @RequestBody SalaProntoRequestDTO dto) {
+        return service.marcarPronto(pin, dto);
     }
 
     @PostMapping("/{pin}/revanche")

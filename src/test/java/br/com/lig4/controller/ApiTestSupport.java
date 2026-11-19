@@ -46,6 +46,20 @@ abstract class ApiTestSupport {
         return prefixo + "." + UUID.randomUUID().toString().substring(0, 8) + "@lig4.com";
     }
 
+    /**
+     * Marca os dois jogadores como prontos no lobby. Com o convidado na sala, a partida começa
+     * quando o segundo marca. Devolve a resposta do segundo (a sala já em JOGANDO, com o partidaId).
+     */
+    protected Resposta marcarProntos(String pin, long dono, long convidado) {
+        Resposta primeiro = enviar("PUT", "/salas/" + pin + "/pronto",
+                "{\"jogadorId\":%d,\"pronto\":true}".formatted(dono));
+        if (primeiro.status() != 200) {
+            throw new AssertionError("Falha ao marcar pronto: " + primeiro);
+        }
+        return enviar("PUT", "/salas/" + pin + "/pronto",
+                "{\"jogadorId\":%d,\"pronto\":true}".formatted(convidado));
+    }
+
     protected long criarJogador(String nome) {
         Resposta r = enviar("POST", "/jogadores",
                 "{\"nome\":\"%s\",\"email\":\"%s\"}".formatted(nome, emailUnico(nome.toLowerCase())));

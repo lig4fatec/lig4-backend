@@ -10,6 +10,7 @@ import br.com.lig4.dto.SalaAcaoRequestDTO;
 import br.com.lig4.dto.SalaCorRequestDTO;
 import br.com.lig4.dto.SalaCriarRequestDTO;
 import br.com.lig4.dto.SalaEntrarRequestDTO;
+import br.com.lig4.dto.SalaProntoRequestDTO;
 import br.com.lig4.dto.SalaResponseDTO;
 import br.com.lig4.exception.CodigoErro;
 import br.com.lig4.exception.JogadorNotFoundException;
@@ -111,28 +112,42 @@ public class SalaService {
                     "Essa cor já foi escolhida pelo outro jogador");
         }
 
+        // trocar de cor desmarca o "pronto" de quem trocou
         if (dono) {
             sala.corDono = dto.cor();
+            sala.prontoDono = false;
         } else {
             sala.corConvidado = dto.cor();
+            sala.prontoConvidado = false;
         }
         return SalaResponseDTO.from(sala);
     }
 
-    /** Só o dono inicia, e só com o convidado na sala. A primeira partida começa pelo dono. */
+    /**
+     * Marca ou desmarca o "pronto" de quem está na sala. Quando o convidado está na sala e os dois estão
+     * prontos, a partida começa sozinha (o dono é o jogador 1 e começa), e as marcas voltam a falso.
+     */
     @Transactional
-    public SalaResponseDTO iniciar(String pin, SalaAcaoRequestDTO dto) {
+    public SalaResponseDTO marcarPronto(String pin, SalaProntoRequestDTO dto) {
         Sala sala = buscarComLock(pin);
-        if (!ehDono(sala, dto.jogadorId())) {
-            throw new SalaInvalidaException(CodigoErro.SEM_PERMISSAO, "Só o dono da sala pode iniciar a partida");
+        boolean dono = ehDono(sala, dto.jogadorId());
+        if (!dono && !ehConvidado(sala, dto.jogadorId())) {
+            throw new SalaInvalidaException(CodigoErro.SEM_PERMISSAO, "Este jogador não está na sala");
         }
         exigirAguardando(sala);
-        if (sala.convidado == null) {
-            throw new SalaInvalidaException(CodigoErro.SEM_CONVIDADO, "Aguarde o segundo jogador entrar na sala");
+
+        if (dono) {
+            sala.prontoDono = dto.pronto();
+        } else {
+            sala.prontoConvidado = dto.pronto();
         }
 
-        sala.partida = novaPartida(sala.dono, sala.convidado, sala.modo);
-        sala.fase = FaseSala.JOGANDO;
+        if (sala.convidado != null && sala.prontoDono && sala.prontoConvidado) {
+            sala.partida = novaPartida(sala.dono, sala.convidado, sala.modo);
+            sala.fase = FaseSala.JOGANDO;
+            sala.prontoDono = false;
+            sala.prontoConvidado = false;
+        }
         return SalaResponseDTO.from(sala);
     }
 
@@ -188,6 +203,8 @@ public class SalaService {
                 } else {
                     sala.convidado = null;
                     sala.corConvidado = null;
+                    sala.prontoDono = false;
+                    sala.prontoConvidado = false;
                 }
             }
             case JOGANDO -> sala.fase = FaseSala.ENCERRADA;

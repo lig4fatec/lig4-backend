@@ -38,3 +38,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0019](0019-presenca-e-logs-do-websocket.md) | Presença dos jogadores na partida e logs do WebSocket | Implementado |
 | [0018](0018-placar-e-fim-da-serie.md) | Placar e fim da série (melhor de 3 e 5) | Substituído pelo PRD-0020 |
 | [0020](0020-modo-de-jogo-e-moedas-por-modo.md) | Modo de jogo (Clássico e Caos), fim da série e moedas por modo | Implementado |
+| [0021](0021-pronto-no-lobby.md) | "Pronto" dos dois jogadores para começar a partida | Implementado |
