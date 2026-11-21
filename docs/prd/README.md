@@ -40,3 +40,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0020](0020-modo-de-jogo-e-moedas-por-modo.md) | Modo de jogo (Clássico e Caos), fim da série e moedas por modo | Implementado |
 | [0021](0021-pronto-no-lobby.md) | "Pronto" dos dois jogadores para começar a partida | Implementado |
 | [0022](0022-desistencia-e-empate.md) | Desistência e proposta de empate | Implementado |
+| [0023](0023-compra-de-moedas-e-poderes-na-loja.md) | Compra simulada de moedas e poderes na loja | Implementado |

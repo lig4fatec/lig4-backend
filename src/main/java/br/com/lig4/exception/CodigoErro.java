@@ -24,6 +24,7 @@ public enum CodigoErro {
     ITEM_NAO_POSSUIDO,
     ITEM_JA_POSSUIDO,
     SALDO_INSUFICIENTE,
+    PACOTE_INEXISTENTE,
     // salas
     PIN_INVALIDO,
     PIN_NAO_ENCONTRADO,
