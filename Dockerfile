@@ -1,11 +1,12 @@
 # Estágio 1: compila o projeto
 FROM eclipse-temurin:25-jdk AS build
 WORKDIR /app
-COPY mvnw pom.xml ./
 COPY .mvn .mvn
-RUN chmod +x mvnw && ./mvnw -B -q dependency:go-offline
+COPY mvnw pom.xml ./
+RUN chmod +x mvnw
 COPY src src
-RUN ./mvnw -B -q clean package -DskipTests
+# Sem -q, para o log mostrar o erro caso falhe. O package baixa o que precisa.
+RUN ./mvnw -B clean package -DskipTests
 
 # Estágio 2: só o necessário para rodar
 FROM eclipse-temurin:25-jre
