@@ -229,7 +229,7 @@ class PartidaWebSocketTest {
         long j2 = novoJogador("WsPoderB");
         RestClient.create("http://localhost:" + porta)
                 .post().uri("/jogadores/" + j1 + "/loja/comprar").contentType(MediaType.APPLICATION_JSON)
-                .body("{\"itemId\":\"poder-congelar\"}").retrieve().toBodilessEntity();
+                .body("{\"itemId\":\"congelar-coluna\"}").retrieve().toBodilessEntity();
         long partida = postar("/partidas",
                 "{\"jogadorUmId\":%d,\"jogadorDoisId\":%d,\"modo\":\"CAOS\"}".formatted(j1, j2));
         Cliente c1 = new Cliente();

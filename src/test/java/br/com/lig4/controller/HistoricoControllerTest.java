@@ -63,7 +63,7 @@ class HistoricoControllerTest extends ApiTestSupport {
         Resposta doVencedor = historico(j1, "");
         assertTrue(doVencedor.corpo().contains("\"resultado\":\"VITORIA\""), doVencedor.corpo());
         assertTrue(doVencedor.corpo().contains("\"adversario\":\"Perde\""), doVencedor.corpo());
-        assertTrue(doVencedor.corpo().contains("\"modo\":\"online\""), doVencedor.corpo());
+                assertTrue(doVencedor.corpo().contains("\"modo\":\"CLASSICO\""), doVencedor.corpo());
 
         Resposta doPerdedor = historico(j2, "");
         assertTrue(doPerdedor.corpo().contains("\"resultado\":\"DERROTA\""), doPerdedor.corpo());
@@ -121,19 +121,35 @@ class HistoricoControllerTest extends ApiTestSupport {
     }
 
     @Test
-    void filtraPorModo() {
+    void filtraPorModoDoJogo() {
         long j1 = criarJogador("Filtro1");
         long j2 = criarJogador("Filtro2");
-        finalizar(novaPartida(j1, j2), j1);
+        long classica = novaPartida(j1, j2); // CLASSICO (padrão)
+        finalizar(classica, j1);
+        long caotica = novaPartidaModo(j1, j2, "CAOS");
+        finalizar(caotica, j1);
 
-        assertFalse(historico(j1, "?filtro=online").corpo().contains("\"partidas\":[]"));
+        String soClassico = historico(j1, "?filtro=classico").corpo();
+        assertTrue(soClassico.contains("\"id\":" + classica), soClassico);
+        assertFalse(soClassico.contains("\"id\":" + caotica), soClassico);
+
+        String soCaos = historico(j1, "?filtro=caos").corpo();
+        assertTrue(soCaos.contains("\"id\":" + caotica), soCaos);
+        assertTrue(soCaos.contains("\"modo\":\"CAOS\""), soCaos);
+        assertFalse(soCaos.contains("\"id\":" + classica), soCaos);
+
         assertFalse(historico(j1, "?filtro=todos").corpo().contains("\"partidas\":[]"));
-        assertTrue(historico(j1, "?filtro=diario").corpo().contains("\"partidas\":[]"));
+        esperar(historico(j1, "?filtro=diario"), 400, "FILTRO_INVALIDO");
         esperar(historico(j1, "?filtro=qualquer"), 400, "FILTRO_INVALIDO");
     }
 
     @Test
     void jogadorInexistenteDevolve404() {
         esperar(historico(999999999L, ""), 404, "JOGADOR_NAO_ENCONTRADO");
+    }
+
+    private long novaPartidaModo(long um, long dois, String modo) {
+        return enviar("POST", "/partidas",
+                "{\"jogadorUmId\":%d,\"jogadorDoisId\":%d,\"modo\":\"%s\"}".formatted(um, dois, modo)).id();
     }
 }
