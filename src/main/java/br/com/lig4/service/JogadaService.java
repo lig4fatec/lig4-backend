@@ -3,24 +3,30 @@ package br.com.lig4.service;
 import br.com.lig4.domain.FaseSala;
 import br.com.lig4.domain.JogadaRegistro;
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.domain.ModoJogo;
 import br.com.lig4.domain.MotivoFim;
 import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.Sala;
 import br.com.lig4.domain.StatusPartida;
+import br.com.lig4.domain.TipoJogada;
+import br.com.lig4.dto.CongelamentoDTO;
 import br.com.lig4.dto.JogadaHistoricoDTO;
 import br.com.lig4.dto.JogadaRequestDTO;
 import br.com.lig4.dto.JogadaResponseDTO;
 import br.com.lig4.dto.JogadorResumoDTO;
 import br.com.lig4.dto.PartidaEstadoDTO;
+import br.com.lig4.dto.PoderDTO;
 import br.com.lig4.engine.Disco;
 import br.com.lig4.engine.Jogada;
 import br.com.lig4.engine.JogadaInvalidaException;
 import br.com.lig4.engine.Jogo;
+import br.com.lig4.engine.Poder;
 import br.com.lig4.engine.StatusJogo;
 import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.exception.PartidaInvalidaException;
 import br.com.lig4.exception.PartidaNotFoundException;
 import br.com.lig4.repository.JogadaRegistroRepository;
+import br.com.lig4.repository.ItemJogadorRepository;
 import br.com.lig4.repository.JogadorRepository;
 import br.com.lig4.repository.PartidaRepository;
 import br.com.lig4.repository.SalaRepository;
@@ -30,6 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class JogadaService {
@@ -40,19 +48,22 @@ public class JogadaService {
     private final SalaRepository salaRepository;
     private final RecompensaService recompensas;
     private final RelogioPartida relogio;
+    private final ItemJogadorRepository itensRepository;
 
     public JogadaService(PartidaRepository partidaRepository,
                          JogadorRepository jogadorRepository,
                          JogadaRegistroRepository jogadaRepository,
                          SalaRepository salaRepository,
                          RecompensaService recompensas,
-                         RelogioPartida relogio) {
+                         RelogioPartida relogio,
+                         ItemJogadorRepository itensRepository) {
         this.partidaRepository = partidaRepository;
         this.jogadorRepository = jogadorRepository;
         this.jogadaRepository = jogadaRepository;
         this.salaRepository = salaRepository;
         this.recompensas = recompensas;
         this.relogio = relogio;
+        this.itensRepository = itensRepository;
     }
 
     @Transactional
@@ -68,10 +79,7 @@ public class JogadaService {
         Disco disco = discoDe(partida, dto.jogadorId());
 
         List<JogadaRegistro> anteriores = jogadaRepository.findByPartidaIdOrderByNumeroAsc(partidaId);
-        Jogo jogo = new Jogo(Disco.VERMELHO);
-        for (JogadaRegistro anterior : anteriores) {
-            jogo.jogar(discoDe(partida, anterior.jogador.id), anterior.coluna);
-        }
+        Jogo jogo = reproduzir(partida, anteriores);
 
         Jogada jogada = jogo.jogar(disco, dto.coluna());
 
@@ -134,7 +142,9 @@ public class JogadaService {
                 jogo.getTabuleiro().comoMatriz(),
                 partida.relogioDe == null ? null : partida.relogioDe.id,
                 relogio.restante(partida, partida.jogadorUm.id, agora),
-                relogio.restante(partida, partida.jogadorDois.id, agora));
+                relogio.restante(partida, partida.jogadorDois.id, agora),
+                congelamentosDe(partida, jogo),
+                jogo.isPecaExtraAtiva());
     }
 
     @Transactional(readOnly = true)
@@ -154,10 +164,8 @@ public class JogadaService {
 
         Instant agora = Instant.now();
         List<JogadaRegistro> jogadas = jogadaRepository.findByPartidaIdOrderByNumeroAsc(partidaId);
-        Jogo jogo = new Jogo(Disco.VERMELHO);
-        for (JogadaRegistro j : jogadas) {
-            jogo.jogar(discoDe(partida, j.jogador.id), j.coluna);
-        }
+        Jogo jogo = reproduzir(partida, jogadas);
+        int totalJogadas = (int) jogadas.stream().filter(j -> j.tipo == TipoJogada.PECA).count();
 
         StatusJogo resultado = jogo.getStatus();
         Long vencedorId = resultado == StatusJogo.VENCEDOR
@@ -199,7 +207,7 @@ public class JogadaService {
                 resultado,
                 vencedorId,
                 proximoJogadorId,
-                jogadas.size(),
+                totalJogadas,
                 jogo.getTabuleiro().comoMatriz(),
                 sala == null ? null : sala.pin,
                 partida.modo,
@@ -208,7 +216,11 @@ public class JogadaService {
                 empatesUsados,
                 partida.relogioDe == null ? null : partida.relogioDe.id,
                 relogio.restante(partida, partida.jogadorUm.id, agora),
-                relogio.restante(partida, partida.jogadorDois.id, agora));
+                relogio.restante(partida, partida.jogadorDois.id, agora),
+                poderesUsadosDe(partida, jogo),
+                poderesDisponiveisDe(partida, jogo),
+                congelamentosDe(partida, jogo),
+                jogo.isPecaExtraAtiva());
     }
 
     @Transactional(readOnly = true)
@@ -218,7 +230,59 @@ public class JogadaService {
         discoDe(partida, jogadorId);
     }
 
-    private Disco discoDe(Partida partida, Long jogadorId) {
+    /** Refaz a partida do começo, jogada por jogada (peças e poderes), para chegar à situação atual. */
+    Jogo reproduzir(Partida partida, List<JogadaRegistro> registros) {
+        Jogo jogo = new Jogo(Disco.VERMELHO);
+        for (JogadaRegistro r : registros) {
+            Disco disco = discoDe(partida, r.jogador.id);
+            switch (r.tipo) {
+                case PECA -> jogo.jogar(disco, r.coluna);
+                case QUEIMAR -> jogo.queimar(disco, r.coluna, r.linha);
+                case CONGELAR -> jogo.congelar(disco, r.coluna);
+                case EXTRA -> jogo.pecaExtra(disco);
+            }
+        }
+        return jogo;
+    }
+
+    private List<PoderDTO> poderesUsadosDe(Partida partida, Jogo jogo) {
+        List<PoderDTO> usados = new ArrayList<>();
+        for (Disco disco : Disco.values()) {
+            Long jogadorId = jogadorDe(partida, disco);
+            for (Poder poder : jogo.getPoderesUsados(disco)) {
+                usados.add(new PoderDTO(jogadorId, poder));
+            }
+        }
+        return usados;
+    }
+
+    /** Poderes comprados e ainda não usados. Só existem no Caos, com a partida em andamento. */
+    private List<PoderDTO> poderesDisponiveisDe(Partida partida, Jogo jogo) {
+        List<PoderDTO> disponiveis = new ArrayList<>();
+        if (partida.modo != ModoJogo.CAOS || partida.status != StatusPartida.EM_ANDAMENTO) {
+            return disponiveis;
+        }
+        for (Disco disco : Disco.values()) {
+            Long jogadorId = jogadorDe(partida, disco);
+            Set<String> comprados = itensRepository.findByJogadorId(jogadorId).stream()
+                    .map(item -> item.itemId)
+                    .collect(Collectors.toSet());
+            for (Poder poder : Poder.values()) {
+                if (comprados.contains(poder.itemId()) && !jogo.getPoderesUsados(disco).contains(poder)) {
+                    disponiveis.add(new PoderDTO(jogadorId, poder));
+                }
+            }
+        }
+        return disponiveis;
+    }
+
+    List<CongelamentoDTO> congelamentosDe(Partida partida, Jogo jogo) {
+        return jogo.getCongelamentos().stream()
+                .map(c -> new CongelamentoDTO(c.coluna(), jogadorDe(partida, c.afetado()), c.turnosRestantes()))
+                .toList();
+    }
+
+    Disco discoDe(Partida partida, Long jogadorId) {
         if (jogadorId.equals(partida.jogadorUm.id)) {
             return Disco.VERMELHO;
         }

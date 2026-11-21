@@ -42,3 +42,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0022](0022-desistencia-e-empate.md) | Desistência e proposta de empate | Implementado |
 | [0023](0023-compra-de-moedas-e-poderes-na-loja.md) | Compra simulada de moedas e poderes na loja | Implementado |
 | [0024](0024-relogio-por-jogador.md) | Relógio por jogador | Implementado |
+| [0025](0025-poderes-do-caos.md) | Poderes do modo Caos | Implementado |

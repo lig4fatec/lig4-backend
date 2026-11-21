@@ -222,4 +222,31 @@ class PartidaWebSocketTest {
         s1.close();
         s2Nova.close();
     }
+
+        @Test
+    void poderChegaParaOsDoisJogadores() throws Exception {
+        long j1 = novoJogador("WsPoderA");
+        long j2 = novoJogador("WsPoderB");
+        RestClient.create("http://localhost:" + porta)
+                .post().uri("/jogadores/" + j1 + "/loja/comprar").contentType(MediaType.APPLICATION_JSON)
+                .body("{\"itemId\":\"poder-congelar\"}").retrieve().toBodilessEntity();
+        long partida = postar("/partidas",
+                "{\"jogadorUmId\":%d,\"jogadorDoisId\":%d,\"modo\":\"CAOS\"}".formatted(j1, j2));
+        Cliente c1 = new Cliente();
+        Cliente c2 = new Cliente();
+        WebSocketSession s1 = conectar(partida, j1, c1);
+        WebSocketSession s2 = conectar(partida, j2, c2);
+        c1.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+        c2.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+
+        s1.sendMessage(new TextMessage("{\"tipo\":\"PODER\",\"poder\":\"CONGELAR\",\"coluna\":3}"));
+
+        String para1 = c1.esperar("\"congelamentos\":[{");
+        String para2 = c2.esperar("\"congelamentos\":[{");
+        assertTrue(para1.contains("\"tipo\":\"ESTADO\""), para1);
+        assertTrue(para2.contains("\"coluna\":3"), para2);
+        assertTrue(para2.contains("\"proximoJogadorId\":" + j2), para2);
+        s1.close();
+        s2.close();
+    }
 }
