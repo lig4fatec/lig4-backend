@@ -49,16 +49,16 @@ class LojaControllerTest extends ApiTestSupport {
     }
 
     @Test
-    void lojaNovaTem15ItensSaldoInicialEItensGratisEquipados() {
+    void lojaNovaTem23ItensSaldoInicialEItensGratisEquipados() {
         long id = criarJogador("Loja");
 
         Resposta r = loja(id);
 
         assertEquals(200, r.status(), r.corpo());
         assertTrue(r.corpo().contains("\"moedas\":500"), r.corpo());
-        assertEquals(15, contar(r.corpo(), "\"preco\":"), r.corpo());
+        assertEquals(23, contar(r.corpo(), "\"preco\":"), r.corpo());
         assertTrue(r.corpo().contains(
-                "\"equipados\":{\"avatar\":\"avatar-classico\",\"board\":\"board-minimalista\",\"emote\":\"emote-saudacao\"}"),
+                "\"equipados\":{\"avatar\":\"avatar-padrao\",\"board\":\"board-classico\",\"emote\":\"emote-risadinha\"}"),
                 r.corpo());
         assertEquals(3, contar(r.corpo(), "\"preco\":0,\"possuido\":true,\"equipado\":true"), r.corpo());
     }
@@ -67,12 +67,12 @@ class LojaControllerTest extends ApiTestSupport {
     void deveComprarUmItemDescontandoAsMoedas() {
         long id = criarJogador("Compra");
 
-        Resposta r = comprar(id, "avatar-folhas");
+        Resposta r = comprar(id, "avatar-samurai");
 
         assertEquals(200, r.status(), r.corpo());
         assertTrue(r.corpo().contains("\"moedas\":320"), r.corpo());
         assertTrue(r.corpo().contains(
-                "\"id\":\"avatar-folhas\",\"nome\":\"Folhas\",\"preco\":180,\"possuido\":true,\"equipado\":false"),
+                "\"id\":\"avatar-samurai\",\"nome\":\"Samurai\",\"preco\":180,\"possuido\":true,\"equipado\":false"),
                 r.corpo());
         // o perfil mostra o mesmo saldo
         assertTrue(get("/jogadores/" + id + "/perfil").corpo().contains("\"moedas\":320"));
@@ -81,17 +81,17 @@ class LojaControllerTest extends ApiTestSupport {
     @Test
     void naoDeveComprarOMesmoItemDuasVezes() {
         long id = criarJogador("Repete");
-        assertEquals(200, comprar(id, "emote-boa-partida").status());
+        assertEquals(200, comprar(id, "emote-aplauso").status());
 
-        esperar(comprar(id, "emote-boa-partida"), 409, "ITEM_JA_POSSUIDO");
-        esperar(comprar(id, "avatar-classico"), 409, "ITEM_JA_POSSUIDO"); // grátis já é de todos
+        esperar(comprar(id, "emote-aplauso"), 409, "ITEM_JA_POSSUIDO");
+        esperar(comprar(id, "avatar-padrao"), 409, "ITEM_JA_POSSUIDO"); // grátis já é de todos
     }
 
     @Test
     void naoDeveComprarSemSaldoENemCobrar() {
         long id = criarJogador("Pobre");
 
-        esperar(comprar(id, "avatar-dourado"), 409, "SALDO_INSUFICIENTE"); // custa 520, tem 500
+        esperar(comprar(id, "avatar-mago"), 409, "SALDO_INSUFICIENTE"); // custa 520, tem 500
 
         assertTrue(loja(id).corpo().contains("\"moedas\":500"));
     }
@@ -106,14 +106,14 @@ class LojaControllerTest extends ApiTestSupport {
     @Test
     void deveEquiparUmItemComprado() {
         long id = criarJogador("Equipa");
-        comprar(id, "avatar-folhas");
+        comprar(id, "avatar-samurai");
 
-        Resposta r = equipar(id, "avatar", "avatar-folhas");
+        Resposta r = equipar(id, "avatar", "avatar-samurai");
 
         assertEquals(200, r.status(), r.corpo());
-        assertTrue(r.corpo().contains("\"avatar\":\"avatar-folhas\""), r.corpo());
+        assertTrue(r.corpo().contains("\"avatar\":\"avatar-samurai\""), r.corpo());
         assertTrue(r.corpo().contains(
-                "\"id\":\"avatar-folhas\",\"nome\":\"Folhas\",\"preco\":180,\"possuido\":true,\"equipado\":true"),
+                "\"id\":\"avatar-samurai\",\"nome\":\"Samurai\",\"preco\":180,\"possuido\":true,\"equipado\":true"),
                 r.corpo());
     }
 
@@ -121,15 +121,15 @@ class LojaControllerTest extends ApiTestSupport {
     void naoDeveEquiparItemNaoComprado() {
         long id = criarJogador("SemItem");
 
-        esperar(equipar(id, "avatar", "avatar-orbita"), 409, "ITEM_NAO_POSSUIDO");
+        esperar(equipar(id, "avatar", "avatar-robo"), 409, "ITEM_NAO_POSSUIDO");
     }
 
     @Test
     void naoDeveEquiparItemDeOutraCategoria() {
         long id = criarJogador("Categoria");
 
-        esperar(equipar(id, "board", "avatar-classico"), 404, "ITEM_INEXISTENTE");
-        esperar(equipar(id, "categoria-falsa", "avatar-classico"), 404, "ITEM_INEXISTENTE");
+        esperar(equipar(id, "board", "avatar-padrao"), 404, "ITEM_INEXISTENTE");
+        esperar(equipar(id, "categoria-falsa", "avatar-padrao"), 404, "ITEM_INEXISTENTE");
     }
 
     @Test
@@ -138,13 +138,13 @@ class LojaControllerTest extends ApiTestSupport {
 
         Resposta r = loja(id);
 
-        assertTrue(r.corpo().contains("\"id\":\"poder\",\"nome\":\"Poderes\""), r.corpo());
+        assertTrue(r.corpo().contains("\"id\":\"poderes\",\"nome\":\"Poderes\""), r.corpo());
         assertTrue(r.corpo().contains(
-                "\"id\":\"poder-queimar\",\"nome\":\"Queimar Peça\",\"preco\":100,\"possuido\":false,\"equipado\":false"),
+                "\"id\":\"congelar-coluna\",\"nome\":\"Congelar Coluna\",\"preco\":100,\"possuido\":false,\"equipado\":false"),
                 r.corpo());
-        assertTrue(r.corpo().contains("\"id\":\"poder-congelar\",\"nome\":\"Congelar Coluna\",\"preco\":100"),
+        assertTrue(r.corpo().contains("\"id\":\"queimar-peca\",\"nome\":\"Queimar Peça\",\"preco\":100"),
                 r.corpo());
-        assertTrue(r.corpo().contains("\"id\":\"poder-extra\",\"nome\":\"Peça Extra\",\"preco\":100"),
+        assertTrue(r.corpo().contains("\"id\":\"peca-extra\",\"nome\":\"Peça Extra\",\"preco\":100"),
                 r.corpo());
     }
 
@@ -152,22 +152,22 @@ class LojaControllerTest extends ApiTestSupport {
     void deveComprarUmPoderEMantelo() {
         long id = criarJogador("CompraPoder");
 
-        Resposta r = comprar(id, "poder-queimar");
+        Resposta r = comprar(id, "queimar-peca");
 
         assertEquals(200, r.status(), r.corpo());
         assertTrue(r.corpo().contains("\"moedas\":400"), r.corpo());
         assertTrue(r.corpo().contains(
-                "\"id\":\"poder-queimar\",\"nome\":\"Queimar Peça\",\"preco\":100,\"possuido\":true,\"equipado\":false"),
+                "\"id\":\"queimar-peca\",\"nome\":\"Queimar Peça\",\"preco\":100,\"possuido\":true,\"equipado\":false"),
                 r.corpo());
-        esperar(comprar(id, "poder-queimar"), 409, "ITEM_JA_POSSUIDO");
+        esperar(comprar(id, "queimar-peca"), 409, "ITEM_JA_POSSUIDO");
     }
 
     @Test
     void poderNaoSeEquipa() {
         long id = criarJogador("EquipaPoder");
-        assertEquals(200, comprar(id, "poder-extra").status());
+        assertEquals(200, comprar(id, "peca-extra").status());
 
-        esperar(equipar(id, "poder", "poder-extra"), 404, "ITEM_INEXISTENTE");
+        esperar(equipar(id, "poderes", "peca-extra"), 404, "ITEM_INEXISTENTE");
     }
 
     @Test
@@ -199,10 +199,10 @@ class LojaControllerTest extends ApiTestSupport {
     @Test
     void moedasCompradasPermitemComprarOQueAntesNaoCabia() {
         long id = criarJogador("Rico");
-        esperar(comprar(id, "avatar-dourado"), 409, "SALDO_INSUFICIENTE"); // custa 520, tem 500
+        esperar(comprar(id, "avatar-mago"), 409, "SALDO_INSUFICIENTE"); // custa 520, tem 500
 
         assertEquals(200, comprarMoedas(id, "pacote-100").status());
-        Resposta r = comprar(id, "avatar-dourado");
+        Resposta r = comprar(id, "avatar-mago");
 
         assertEquals(200, r.status(), r.corpo());
         assertTrue(r.corpo().contains("\"moedas\":80"), r.corpo());
@@ -227,7 +227,7 @@ class LojaControllerTest extends ApiTestSupport {
     @Test
     void jogadorInexistenteDevolve404() {
         esperar(loja(999999999L), 404, "JOGADOR_NAO_ENCONTRADO");
-        esperar(comprar(999999999L, "avatar-folhas"), 404, "JOGADOR_NAO_ENCONTRADO");
+        esperar(comprar(999999999L, "avatar-samurai"), 404, "JOGADOR_NAO_ENCONTRADO");
         esperar(comprarMoedas(999999999L, "pacote-100"), 404, "JOGADOR_NAO_ENCONTRADO");
     }
 }

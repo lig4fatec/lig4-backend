@@ -18,25 +18,33 @@ public final class CatalogoLoja {
 
     public static final List<Categoria> CATEGORIAS = List.of(
             new Categoria("avatar", "Avatares", List.of(
-                    new Item("avatar-classico", "avatar", "Clássico", 0),
-                    new Item("avatar-folhas", "avatar", "Folhas", 180),
-                    new Item("avatar-orbita", "avatar", "Órbita", 360),
-                    new Item("avatar-dourado", "avatar", "Dourado", 520))),
+                    new Item("avatar-padrao", "avatar", "Padrão", 0),
+                    new Item("avatar-samurai", "avatar", "Samurai", 180),
+                    new Item("avatar-robo", "avatar", "Robô", 180),
+                    new Item("avatar-rei", "avatar", "Rei", 360),
+                    new Item("avatar-rainha", "avatar", "Rainha", 360),
+                    new Item("avatar-mago", "avatar", "Mago", 520))),
             new Categoria("board", "Tabuleiros", List.of(
-                    new Item("board-minimalista", "board", "Minimalista", 0),
-                    new Item("board-cobalto", "board", "Cobalto", 160),
-                    new Item("board-linhas", "board", "Linhas", 340),
-                    new Item("board-noturno", "board", "Noturno", 480))),
+                    new Item("board-classico", "board", "Clássico", 0),
+                    new Item("board-espacial", "board", "Espacial", 160),
+                    new Item("board-floresta", "board", "Floresta", 160),
+                    new Item("board-medieval", "board", "Medieval", 340),
+                    new Item("board-praia", "board", "Praia", 340),
+                    new Item("board-inverno", "board", "Inverno", 480))),
             new Categoria("emote", "Emotes", List.of(
-                    new Item("emote-saudacao", "emote", "Saudação", 0),
-                    new Item("emote-boa-partida", "emote", "Boa partida", 100),
-                    new Item("emote-concentracao", "emote", "Concentração", 230),
-                    new Item("emote-vitoria", "emote", "Vitória", 400))),
+                    new Item("emote-risadinha", "emote", "Risadinha", 0),
+                    new Item("emote-aplauso", "emote", "Aplauso", 100),
+                    new Item("emote-choro", "emote", "Choro", 100),
+                    new Item("emote-surpresa", "emote", "Surpresa", 100),
+                    new Item("emote-bravo", "emote", "Bravo", 100),
+                    new Item("emote-cool", "emote", "Cool", 230),
+                    new Item("emote-coracao", "emote", "Coração", 230),
+                    new Item("emote-confuso", "emote", "Confuso", 230))),
             // Poderes do modo Caos: comprados uma vez, ficam para sempre (cada um vale 1 uso por partida).
-            new Categoria("poder", "Poderes", List.of(
-                    new Item("poder-queimar", "poder", "Queimar Peça", 100),
-                    new Item("poder-congelar", "poder", "Congelar Coluna", 100),
-                    new Item("poder-extra", "poder", "Peça Extra", 100))));
+            new Categoria("poderes", "Poderes", List.of(
+                    new Item("congelar-coluna", "poderes", "Congelar Coluna", 100),
+                    new Item("queimar-peca", "poderes", "Queimar Peça", 100),
+                    new Item("peca-extra", "poderes", "Peça Extra", 100))));
 
     public static final List<Pacote> PACOTES = List.of(
             new Pacote("pacote-100", 100, 5),

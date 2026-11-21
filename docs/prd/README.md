@@ -44,3 +44,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0024](0024-relogio-por-jogador.md) | Relógio por jogador | Implementado |
 | [0025](0025-poderes-do-caos.md) | Poderes do modo Caos | Implementado |
 | [0026](0026-gravidade-do-queimar.md) | Gravidade depois do Queimar | Implementado |
+| [0027](0027-catalogo-alinhado-ao-front.md) | Catálogo da loja alinhado ao front | Implementado |

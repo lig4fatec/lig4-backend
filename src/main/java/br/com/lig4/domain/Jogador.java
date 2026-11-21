@@ -52,11 +52,11 @@ public class Jogador {
 
     // itens equipados na loja (um por categoria)
     @Column(name = "avatar_equipado", nullable = false, length = 40)
-    public String avatarEquipado = "avatar-classico";
+    public String avatarEquipado = "avatar-padrao";
 
     @Column(name = "tabuleiro_equipado", nullable = false, length = 40)
-    public String tabuleiroEquipado = "board-minimalista";
+    public String tabuleiroEquipado = "board-classico";
 
     @Column(name = "emote_equipado", nullable = false, length = 40)
-    public String emoteEquipado = "emote-saudacao";
+    public String emoteEquipado = "emote-risadinha";
 }
