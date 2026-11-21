@@ -46,3 +46,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0026](0026-gravidade-do-queimar.md) | Gravidade depois do Queimar | Implementado |
 | [0027](0027-catalogo-alinhado-ao-front.md) | Catálogo da loja alinhado ao front | Implementado |
 | [0028](0028-historico-por-modo-de-jogo.md) | Histórico por modo de jogo | Implementado |
+| [0029](0029-apelido-no-cadastro.md) | Apelido no cadastro | Implementado |

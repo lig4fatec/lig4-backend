@@ -93,4 +93,35 @@ class AuthControllerTest extends ApiTestSupport {
 
         esperar(enviar("POST", "/auth/login", corpo(email, "qualquer1")), 401, "CREDENCIAIS_INVALIDAS");
     }
+
+        private String corpoComNick(String email, String senha, String nick) {
+        return "{\"email\":\"%s\",\"senha\":\"%s\",\"nick\":\"%s\"}".formatted(email, senha, nick);
+    }
+
+    @Test
+    void deveCadastrarComOApelidoEscolhido() {
+        String email = emailUnico("apelido");
+
+        Resposta r = enviar("POST", "/auth/cadastro", corpoComNick(email, "segredo123", "Rainha"));
+
+        assertEquals(201, r.status(), r.corpo());
+        assertTrue(r.corpo().contains("\"nome\":\"Rainha\""), r.corpo());
+    }
+
+    @Test
+    void semApelidoONickComecaComAParteDoEmail() {
+        String email = emailUnico("joana");
+        String esperado = email.substring(0, email.indexOf('@'));
+
+        Resposta r = enviar("POST", "/auth/cadastro", corpo(email, "segredo123"));
+
+        assertEquals(201, r.status(), r.corpo());
+        assertTrue(r.corpo().contains("\"nome\":\"" + esperado + "\""), r.corpo());
+    }
+
+    @Test
+    void deveRecusarApelidoCurto() {
+        esperar(enviar("POST", "/auth/cadastro", corpoComNick(emailUnico("curto"), "segredo123", "ab")),
+                400, "NICK_INVALIDO");
+    }
 }

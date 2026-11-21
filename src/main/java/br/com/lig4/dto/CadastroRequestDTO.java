@@ -15,6 +15,10 @@ public record CadastroRequestDTO(
         // 72 é o limite do BCrypt (bytes além disso seriam ignorados)
         @NotNull(message = "A senha é obrigatória")
         @Size(min = 6, max = 72, message = "A senha deve ter entre 6 e 72 caracteres")
-        String senha
+        String senha,
+
+        /** Apelido escolhido no cadastro (opcional). Sem ele, o nick começa com a parte antes do @. */
+        @Size(min = 3, max = 20, message = "O apelido deve ter entre 3 e 20 caracteres")
+        String nick
 ) {
 }
