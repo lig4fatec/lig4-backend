@@ -12,6 +12,10 @@ public record JogadaResponseDTO(
         StatusJogo resultado,
         Long vencedorId,
         Long proximoJogadorId,
-        String[][] tabuleiro
+        String[][] tabuleiro,
+        /** De quem é o relógio que está correndo agora (o próximo a jogar); nulo se a partida terminou. */
+        Long relogioDe,
+        long tempoJogadorUmMs,
+        long tempoJogadorDoisMs
 ) {
 }

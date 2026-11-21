@@ -28,6 +28,12 @@ public record PartidaEstadoDTO(
         /** Quem propôs um empate que ainda não foi respondido (nulo se não há proposta). */
         Long empatePropostoPor,
         /** Ids dos jogadores que já usaram a proposta de empate desta partida. */
-        List<Long> empatesUsados
+        List<Long> empatesUsados,
+        /** De quem é o relógio que está correndo (o jogador da vez); nulo se a partida terminou. */
+        Long relogioDe,
+        /** Tempo que o jogador 1 ainda tem, em milissegundos. */
+        long tempoJogadorUmMs,
+        /** Tempo que o jogador 2 ainda tem, em milissegundos. */
+        long tempoJogadorDoisMs
 ) {
 }

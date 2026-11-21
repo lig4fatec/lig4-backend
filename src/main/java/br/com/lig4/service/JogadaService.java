@@ -39,17 +39,20 @@ public class JogadaService {
     private final JogadaRegistroRepository jogadaRepository;
     private final SalaRepository salaRepository;
     private final RecompensaService recompensas;
+    private final RelogioPartida relogio;
 
     public JogadaService(PartidaRepository partidaRepository,
                          JogadorRepository jogadorRepository,
                          JogadaRegistroRepository jogadaRepository,
                          SalaRepository salaRepository,
-                         RecompensaService recompensas) {
+                         RecompensaService recompensas,
+                         RelogioPartida relogio) {
         this.partidaRepository = partidaRepository;
         this.jogadorRepository = jogadorRepository;
         this.jogadaRepository = jogadaRepository;
         this.salaRepository = salaRepository;
         this.recompensas = recompensas;
+        this.relogio = relogio;
     }
 
     @Transactional
@@ -72,6 +75,13 @@ public class JogadaService {
 
         Jogada jogada = jogo.jogar(disco, dto.coluna());
 
+        // Quem estourou o tempo não joga mais: o agendador termina a partida por TEMPO em até 1 segundo.
+        Instant agora = Instant.now();
+        if (relogio.ativo(partida) && relogio.restante(partida, dto.jogadorId(), agora) <= 0) {
+            throw new JogadaInvalidaException(JogadaInvalidaException.Motivo.JOGO_ENCERRADO,
+                    "O seu tempo acabou.");
+        }
+
         Jogador jogador = jogadorRepository.findById(dto.jogadorId())
                 .orElseThrow(() -> new JogadorNotFoundException(dto.jogadorId()));
 
@@ -92,7 +102,10 @@ public class JogadaService {
         Long proximoJogadorId = null;
         if (jogo.getStatus() == StatusJogo.EM_ANDAMENTO) {
             proximoJogadorId = jogadorDe(partida, jogo.getTurno());
+            Jogador proximo = proximoJogadorId.equals(partida.jogadorUm.id) ? partida.jogadorUm : partida.jogadorDois;
+            relogio.passar(partida, jogador, proximo, agora);
         } else {
+            relogio.passar(partida, jogador, null, agora);
             partida.status = StatusPartida.FINALIZADA;
             partida.finalizadoEm = Instant.now();
             partida.empatePendenteDe = null;
@@ -118,7 +131,10 @@ public class JogadaService {
                 jogo.getStatus(),
                 vencedorId,
                 proximoJogadorId,
-                jogo.getTabuleiro().comoMatriz());
+                jogo.getTabuleiro().comoMatriz(),
+                partida.relogioDe == null ? null : partida.relogioDe.id,
+                relogio.restante(partida, partida.jogadorUm.id, agora),
+                relogio.restante(partida, partida.jogadorDois.id, agora));
     }
 
     @Transactional(readOnly = true)
@@ -136,6 +152,7 @@ public class JogadaService {
         Partida partida = partidaRepository.findById(partidaId)
                 .orElseThrow(() -> new PartidaNotFoundException(partidaId));
 
+        Instant agora = Instant.now();
         List<JogadaRegistro> jogadas = jogadaRepository.findByPartidaIdOrderByNumeroAsc(partidaId);
         Jogo jogo = new Jogo(Disco.VERMELHO);
         for (JogadaRegistro j : jogadas) {
@@ -150,7 +167,7 @@ public class JogadaService {
                 ? jogadorDe(partida, jogo.getTurno())
                 : null;
 
-        // Desistência e empate combinado terminam a partida sem a última jogada: vale o que foi gravado nela.
+        // Desistência, empate combinado e tempo terminam a partida sem a última jogada: vale o que foi gravado nela.
         if (partida.status == StatusPartida.FINALIZADA) {
             vencedorId = partida.vencedor == null ? null : partida.vencedor.id;
             resultado = partida.vencedor == null ? StatusJogo.EMPATE : StatusJogo.VENCEDOR;
@@ -188,7 +205,10 @@ public class JogadaService {
                 partida.modo,
                 partida.motivoFim,
                 empatePropostoPor,
-                empatesUsados);
+                empatesUsados,
+                partida.relogioDe == null ? null : partida.relogioDe.id,
+                relogio.restante(partida, partida.jogadorUm.id, agora),
+                relogio.restante(partida, partida.jogadorDois.id, agora));
     }
 
     @Transactional(readOnly = true)

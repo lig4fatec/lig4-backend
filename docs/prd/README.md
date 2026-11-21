@@ -41,3 +41,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0021](0021-pronto-no-lobby.md) | "Pronto" dos dois jogadores para começar a partida | Implementado |
 | [0022](0022-desistencia-e-empate.md) | Desistência e proposta de empate | Implementado |
 | [0023](0023-compra-de-moedas-e-poderes-na-loja.md) | Compra simulada de moedas e poderes na loja | Implementado |
+| [0024](0024-relogio-por-jogador.md) | Relógio por jogador | Implementado |
