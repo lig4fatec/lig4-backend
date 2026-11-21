@@ -87,7 +87,7 @@ public class LojaService {
                 .filter(encontrado -> encontrado.categoria().equals(dto.categoria()))
                 .orElseThrow(() -> itemInexistente(dto.itemId()));
 
-        if (item.categoria().equals("poder")) {
+        if (item.categoria().equals("poderes")) {
             throw new LojaInvalidaException(CodigoErro.ITEM_INEXISTENTE,
                     "Poderes não são equipados: quem os comprou pode usá-los nas partidas do modo Caos");
         }

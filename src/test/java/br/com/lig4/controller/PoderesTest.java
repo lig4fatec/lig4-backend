@@ -57,7 +57,7 @@ class PoderesTest extends ApiTestSupport {
     void poderNoModoClassicoNaoExiste() {
         long j1 = criarJogador("PoderA");
         long j2 = criarJogador("PoderB");
-        comprar(j1, "poder-congelar");
+        comprar(j1, "congelar-coluna");
         long partida = partida(j1, j2, "CLASSICO");
 
         esperar(poder(partida, j1, "CONGELAR", 3, null), 409, "MODO_SEM_PODERES");
@@ -76,8 +76,8 @@ class PoderesTest extends ApiTestSupport {
     void poderDesconhecidoOuSemAlvoDevolve400() {
         long j1 = criarJogador("PoderE");
         long j2 = criarJogador("PoderF");
-        comprar(j1, "poder-queimar");
-        comprar(j1, "poder-congelar");
+        comprar(j1, "queimar-peca");
+        comprar(j1, "congelar-coluna");
         long partida = partida(j1, j2, "CAOS");
 
         esperar(poder(partida, j1, "VOAR", null, null), 400, "PODER_INVALIDO");
@@ -89,7 +89,7 @@ class PoderesTest extends ApiTestSupport {
     void congelarBloqueiaAColunaDoAdversarioEPassaAVez() {
         long j1 = criarJogador("PoderG");
         long j2 = criarJogador("PoderH");
-        comprar(j1, "poder-congelar");
+        comprar(j1, "congelar-coluna");
         long partida = partida(j1, j2, "CAOS");
 
         Resposta r = poder(partida, j1, "CONGELAR", 3, null);
@@ -111,7 +111,7 @@ class PoderesTest extends ApiTestSupport {
     void pecaExtraDaDuasJogadasSeguidas() {
         long j1 = criarJogador("PoderI");
         long j2 = criarJogador("PoderJ");
-        comprar(j1, "poder-extra");
+        comprar(j1, "peca-extra");
         long partida = partida(j1, j2, "CAOS");
 
         Resposta r = poder(partida, j1, "EXTRA", null, null);
@@ -136,7 +136,7 @@ class PoderesTest extends ApiTestSupport {
     void queimarRemoveAPecaDoAdversarioEPassaAVez() {
         long j1 = criarJogador("PoderK");
         long j2 = criarJogador("PoderL");
-        comprar(j2, "poder-queimar");
+        comprar(j2, "queimar-peca");
         long partida = partida(j1, j2, "CAOS");
         assertEquals(201, jogar(partida, j1, 0).status());
 
@@ -152,7 +152,7 @@ class PoderesTest extends ApiTestSupport {
     void queimarSoVaiEmPecaDoAdversario() {
         long j1 = criarJogador("PoderM");
         long j2 = criarJogador("PoderN");
-        comprar(j1, "poder-queimar");
+        comprar(j1, "queimar-peca");
         long partida = partida(j1, j2, "CAOS");
 
         esperar(poder(partida, j1, "QUEIMAR", 0, 0), 409, "ALVO_INVALIDO"); // primeiro lance: não há peça
@@ -165,8 +165,8 @@ class PoderesTest extends ApiTestSupport {
     void poderForaDaVezEUmaVezSo() {
         long j1 = criarJogador("PoderO");
         long j2 = criarJogador("PoderP");
-        comprar(j1, "poder-congelar");
-        comprar(j2, "poder-congelar");
+        comprar(j1, "congelar-coluna");
+        comprar(j2, "congelar-coluna");
         long partida = partida(j1, j2, "CAOS");
 
         esperar(poder(partida, j2, "CONGELAR", 1, null), 409, "FORA_DO_TURNO");
@@ -179,8 +179,8 @@ class PoderesTest extends ApiTestSupport {
     void estadoMostraPoderesDisponiveisEUsados() {
         long j1 = criarJogador("PoderQ");
         long j2 = criarJogador("PoderR");
-        comprar(j1, "poder-congelar");
-        comprar(j1, "poder-extra");
+        comprar(j1, "congelar-coluna");
+        comprar(j1, "peca-extra");
         long partida = partida(j1, j2, "CAOS");
 
         String antes = get("/partidas/" + partida + "/estado").corpo();
@@ -199,7 +199,7 @@ class PoderesTest extends ApiTestSupport {
     void historicoRegistraOPoderUsado() {
         long j1 = criarJogador("PoderS");
         long j2 = criarJogador("PoderT");
-        comprar(j1, "poder-congelar");
+        comprar(j1, "congelar-coluna");
         long partida = partida(j1, j2, "CAOS");
         poder(partida, j1, "CONGELAR", 4, null);
         jogar(partida, j2, 0);
@@ -214,7 +214,7 @@ class PoderesTest extends ApiTestSupport {
     void queimarFazAsPecasDeCimaDescerem() {
         long j1 = criarJogador("PoderU");
         long j2 = criarJogador("PoderV");
-        comprar(j1, "poder-queimar");
+        comprar(j1, "queimar-peca");
         long partida = partida(j1, j2, "CAOS");
         assertEquals(201, jogar(partida, j1, 0).status()); // V na base da col0
         assertEquals(201, jogar(partida, j2, 1).status()); // A na base da col1
