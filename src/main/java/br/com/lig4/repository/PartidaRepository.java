@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +21,19 @@ public interface PartidaRepository extends JpaRepository<Partida, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Partida p where p.id = :id")
     Optional<Partida> buscarComLock(@Param("id") Long id);
+
+    /** Ids das partidas em andamento em que o jogador da vez já passou do prazo do relógio. */
+    @Query("""
+            select p.id from Partida p
+            where p.status = :status
+              and p.prazoEm is not null
+              and p.prazoEm < :agora
+            """)
+    List<Long> buscarComPrazoVencido(@Param("agora") Instant agora, @Param("status") StatusPartida status);
+
+    default List<Long> comTempoEsgotado(Instant agora) {
+        return buscarComPrazoVencido(agora, StatusPartida.EM_ANDAMENTO);
+    }
 
     /** Partidas vencidas pelo jogador (o vencedor só é gravado quando a partida termina). */
     long countByVencedorId(Long jogadorId);

@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.regex.Pattern;
 
 @Service
@@ -34,14 +35,17 @@ public class SalaService {
     private final SalaRepository salaRepository;
     private final JogadorRepository jogadorRepository;
     private final PartidaRepository partidaRepository;
+    private final RelogioPartida relogio;
     private final SecureRandom random = new SecureRandom();
 
     public SalaService(SalaRepository salaRepository,
                        JogadorRepository jogadorRepository,
-                       PartidaRepository partidaRepository) {
+                       PartidaRepository partidaRepository,
+                       RelogioPartida relogio) {
         this.salaRepository = salaRepository;
         this.jogadorRepository = jogadorRepository;
         this.partidaRepository = partidaRepository;
+        this.relogio = relogio;
     }
 
     @Transactional
@@ -218,6 +222,7 @@ public class SalaService {
         partida.jogadorDois = segundo;
         partida.modo = modo;
         partida.status = StatusPartida.EM_ANDAMENTO;
+        relogio.iniciar(partida, Instant.now());
         return partidaRepository.save(partida);
     }
 

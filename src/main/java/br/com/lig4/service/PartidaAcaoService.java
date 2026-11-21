@@ -17,8 +17,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Optional;
 
-/** Desistência e proposta de empate: as formas de terminar a partida sem ligar quatro peças. */
+/** Desistência, proposta de empate e fim por tempo: as formas de terminar a partida sem ligar quatro peças. */
 @Service
 public class PartidaAcaoService {
 
@@ -26,15 +27,18 @@ public class PartidaAcaoService {
     private final SalaRepository salaRepository;
     private final RecompensaService recompensas;
     private final JogadaService jogadaService;
+    private final RelogioPartida relogio;
 
     public PartidaAcaoService(PartidaRepository partidaRepository,
                               SalaRepository salaRepository,
                               RecompensaService recompensas,
-                              JogadaService jogadaService) {
+                              JogadaService jogadaService,
+                              RelogioPartida relogio) {
         this.partidaRepository = partidaRepository;
         this.salaRepository = salaRepository;
         this.recompensas = recompensas;
         this.jogadaService = jogadaService;
+        this.relogio = relogio;
     }
 
     /** Quem desiste perde: o adversário vence e cada um recebe as moedas de vitória e de derrota do modo. */
@@ -88,6 +92,25 @@ public class PartidaAcaoService {
         return jogadaService.estado(partidaId);
     }
 
+    /**
+     * Termina por tempo a partida em que o jogador da vez ficou sem relógio: o adversário vence.
+     * Chamado pelo agendador; não faz nada se a partida já terminou ou se o tempo ainda não acabou.
+     */
+    @Transactional
+    public Optional<PartidaEstadoDTO> encerrarPorTempo(Long partidaId) {
+        Partida partida = partidaRepository.buscarComLock(partidaId).orElse(null);
+        if (partida == null || partida.status != StatusPartida.EM_ANDAMENTO || !relogio.ativo(partida)) {
+            return Optional.empty();
+        }
+        Jogador semTempo = partida.relogioDe;
+        if (relogio.restante(partida, semTempo.id, Instant.now()) > 0) {
+            return Optional.empty();
+        }
+        partida.vencedor = ehJogadorUm(partida, semTempo.id) ? partida.jogadorDois : partida.jogadorUm;
+        encerrar(partida, MotivoFim.TEMPO);
+        return Optional.of(jogadaService.estado(partidaId));
+    }
+
     private void exigirPropostaDoAdversario(Partida partida, Long jogadorId) {
         if (partida.empatePendenteDe == null || partida.empatePendenteDe.id.equals(jogadorId)) {
             throw new AcaoPartidaInvalidaException(CodigoErro.SEM_PROPOSTA_DE_EMPATE,
@@ -113,11 +136,12 @@ public class PartidaAcaoService {
         return jogadorId.equals(partida.jogadorUm.id);
     }
 
-
+    /** Fecha a partida (o vencedor já deve estar definido, ou nulo para empate), para o relógio, paga as moedas e encerra a sala. */
     private void encerrar(Partida partida, MotivoFim motivo) {
         partida.status = StatusPartida.FINALIZADA;
         partida.motivoFim = motivo;
         partida.finalizadoEm = Instant.now();
+        relogio.parar(partida, partida.finalizadoEm);
         partida.empatePendenteDe = null;
         recompensas.conceder(partida);
         salaRepository.findByPartidaId(partida.id).ifPresent(sala -> sala.fase = FaseSala.ENCERRADA);

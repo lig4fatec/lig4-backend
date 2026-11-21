@@ -27,13 +27,16 @@ public class PartidaService {
     private final PartidaRepository partidaRepository;
     private final JogadorRepository jogadorRepository;
     private final RecompensaService recompensas;
+    private final RelogioPartida relogio;
 
     public PartidaService(PartidaRepository partidaRepository,
                           JogadorRepository jogadorRepository,
-                          RecompensaService recompensas) {
+                          RecompensaService recompensas,
+                          RelogioPartida relogio) {
         this.partidaRepository = partidaRepository;
         this.jogadorRepository = jogadorRepository;
         this.recompensas = recompensas;
+        this.relogio = relogio;
     }
 
     @Transactional(readOnly = true)
@@ -67,6 +70,7 @@ public class PartidaService {
         partida.jogadorDois = jogadorDois;
         partida.modo = modo;
         partida.status = StatusPartida.EM_ANDAMENTO;
+        relogio.iniciar(partida, Instant.now());
         partidaRepository.save(partida);
 
         return PartidaResponseDTO.from(partida);
@@ -93,6 +97,7 @@ public class PartidaService {
         partida.motivoFim = partida.vencedor != null ? MotivoFim.VITORIA : MotivoFim.TABULEIRO_CHEIO;
         partida.empatePendenteDe = null;
         partida.finalizadoEm = Instant.now();
+        relogio.parar(partida, partida.finalizadoEm);
         recompensas.conceder(partida);
 
         return PartidaResponseDTO.from(partida);

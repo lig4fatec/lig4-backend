@@ -59,6 +59,25 @@ public class Partida {
     @Column(name = "empate_usado_dois", nullable = false)
     public boolean empateUsadoDois;
 
+    /** Tempo que cada jogador ainda tem, em milissegundos, na última vez em que o relógio foi marcado. */
+    @Column(name = "tempo_um_ms", nullable = false)
+    public long tempoUmMs = 300_000L;
+
+    @Column(name = "tempo_dois_ms", nullable = false)
+    public long tempoDoisMs = 300_000L;
+
+    /** De quem é o relógio que está correndo (o jogador da vez). Vazio em partida sem relógio ou terminada. */
+    @ManyToOne
+    @JoinColumn(name = "relogio_de_id")
+    public Jogador relogioDe;
+
+    @Column(name = "relogio_marcado_em")
+    public Instant relogioMarcadoEm;
+
+    /** Quando o tempo de quem está na vez acaba, se ele não jogar. */
+    @Column(name = "prazo_em")
+    public Instant prazoEm;
+
     @Column(name = "criado_em", nullable = false)
     public Instant criadoEm;
 

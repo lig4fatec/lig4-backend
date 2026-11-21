@@ -63,8 +63,8 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 
 | Método e rota | Corpo | Resposta |
 |---|---|---|
-| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, modo, motivoFim, empatePropostoPor, empatesUsados}` |
-| `POST /partidas/{id}/jogadas` | `{jogadorId, coluna (0 a 6)}` | 201, jogada com o tabuleiro novo |
+| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, modo, motivoFim, empatePropostoPor, empatesUsados, relogioDe, tempoJogadorUmMs, tempoJogadorDoisMs}` |
+| `POST /partidas/{id}/jogadas` | `{jogadorId, coluna (0 a 6)}` | 201, jogada com o tabuleiro novo, `relogioDe` e os tempos |
 | `GET /partidas/{id}/jogadas` | | jogadas em ordem |
 | `POST /partidas/{id}/desistir` | `{jogadorId}` | estado (o adversário vence) |
 | `POST /partidas/{id}/empate` | `{jogadorId}` | estado (propõe empate) |
@@ -73,7 +73,9 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 
 `pin` só vem quando a partida nasceu de uma sala. `POST /partidas` aceita `modo` (`CLASSICO` por padrão). Também existem `GET/POST /partidas`, `GET /partidas/{id}`, `PUT /partidas/{id}` (finalizar) e `DELETE /partidas/{id}`.
 
-**Como a partida terminou (`motivoFim`):** nulo enquanto está em andamento; depois `VITORIA` (quatro peças), `TABULEIRO_CHEIO` (empate sem vencedor), `DESISTENCIA`, `EMPATE_ACORDADO` ou `TEMPO` (reservado para o relógio da partida).
+**Como a partida terminou (`motivoFim`):** nulo enquanto está em andamento; depois `VITORIA` (quatro peças), `TABULEIRO_CHEIO` (empate sem vencedor), `DESISTENCIA`, `EMPATE_ACORDADO` ou `TEMPO` (o tempo de um jogador acabou).
+
+**Relógio:** como no xadrez, cada jogador tem um tempo total (5 minutos por padrão) e só corre o de quem está na vez. O tempo não reinicia a cada jogada. O estado e a resposta de cada jogada trazem `tempoJogadorUmMs` e `tempoJogadorDoisMs` (o que cada um ainda tem, em milissegundos) e `relogioDe` (o id de quem está na vez, ou nulo se a partida terminou). O front mostra a contagem a partir desses valores e os atualiza a cada jogada. Se o tempo de quem está na vez acaba, o servidor termina a partida em até 1 segundo: o adversário vence, `motivoFim` vira `TEMPO`, as moedas são pagas como numa vitória e o `ESTADO` é enviado aos dois pelo WebSocket. Jogar sem tempo devolve `JOGO_ENCERRADO`. O tempo por jogador pode ser mudado no servidor com `LIG4_RELOGIO_TEMPO_POR_JOGADOR_SEGUNDOS`.
 
 **Desistência:** quem desiste perde; o adversário vence e cada um recebe as moedas de vitória e de derrota do modo. Depois disso a partida e a sala ficam `FINALIZADA` e `ENCERRADA`.
 
@@ -90,7 +92,7 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 | Servidor → cliente, ao conectar | `{"tipo":"ESTADO","dados":{...estado...}}` |
 | Cliente → servidor | `{"tipo":"JOGAR","coluna":3}` ou `{"tipo":"ESTADO"}` |
 | Cliente → servidor | `{"tipo":"DESISTIR"}`, `{"tipo":"PROPOR_EMPATE"}`, `{"tipo":"ACEITAR_EMPATE"}` ou `{"tipo":"RECUSAR_EMPATE"}` |
-| Servidor → os dois, depois de desistir ou de uma ação de empate | `{"tipo":"ESTADO","dados":{...estado...}}` |
+| Servidor → os dois, depois de desistir, de uma ação de empate ou do fim por tempo | `{"tipo":"ESTADO","dados":{...estado...}}` |
 | Servidor → os dois | `{"tipo":"JOGADA","dados":{...jogada...}}` |
 | Servidor → quem errou | `{"tipo":"ERRO","codigo":"...","mensagem":"..."}` |
 | Servidor → os conectados, ao conectar ou desconectar alguém | `{"tipo":"PRESENCA","dados":{"conectados":[12,15]}}` |
@@ -109,6 +111,6 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 ## Limitações conhecidas
 
 - Não há token: qualquer cliente pode enviar o `jogadorId` de outro jogador.
-- Partida abandonada não é finalizada e não conta nas estatísticas nem dá moedas.
+- Partida abandonada (sem relógio, criada antes do relógio) não é finalizada e não conta nas estatísticas nem dá moedas. Partidas novas terminam sozinhas por tempo.
 - O desafio diário não existe no back-end (`filtro=diario` devolve lista vazia).
 - A sala é consultada por polling; o WebSocket existe só para a partida.
