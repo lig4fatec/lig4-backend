@@ -31,6 +31,10 @@ class LojaControllerTest extends ApiTestSupport {
         return enviar("POST", "/jogadores/" + jogador + "/loja/comprar", "{\"itemId\":\"%s\"}".formatted(item));
     }
 
+    private Resposta comprarMoedas(long jogador, String pacote) {
+        return enviar("POST", "/jogadores/" + jogador + "/loja/moedas", "{\"pacoteId\":\"%s\"}".formatted(pacote));
+    }
+
     private Resposta equipar(long jogador, String categoria, String item) {
         return enviar("PUT", "/jogadores/" + jogador + "/loja/equipar",
                 "{\"categoria\":\"%s\",\"itemId\":\"%s\"}".formatted(categoria, item));
@@ -45,14 +49,14 @@ class LojaControllerTest extends ApiTestSupport {
     }
 
     @Test
-    void lojaNovaTem12ItensSaldoInicialEItensGratisEquipados() {
+    void lojaNovaTem15ItensSaldoInicialEItensGratisEquipados() {
         long id = criarJogador("Loja");
 
         Resposta r = loja(id);
 
         assertEquals(200, r.status(), r.corpo());
         assertTrue(r.corpo().contains("\"moedas\":500"), r.corpo());
-        assertEquals(12, contar(r.corpo(), "\"preco\":"), r.corpo());
+        assertEquals(15, contar(r.corpo(), "\"preco\":"), r.corpo());
         assertTrue(r.corpo().contains(
                 "\"equipados\":{\"avatar\":\"avatar-classico\",\"board\":\"board-minimalista\",\"emote\":\"emote-saudacao\"}"),
                 r.corpo());
@@ -129,8 +133,101 @@ class LojaControllerTest extends ApiTestSupport {
     }
 
     @Test
+    void lojaTemACategoriaDePoderesComTresItensDeCemMoedas() {
+        long id = criarJogador("Poderes");
+
+        Resposta r = loja(id);
+
+        assertTrue(r.corpo().contains("\"id\":\"poder\",\"nome\":\"Poderes\""), r.corpo());
+        assertTrue(r.corpo().contains(
+                "\"id\":\"poder-queimar\",\"nome\":\"Queimar Peça\",\"preco\":100,\"possuido\":false,\"equipado\":false"),
+                r.corpo());
+        assertTrue(r.corpo().contains("\"id\":\"poder-congelar\",\"nome\":\"Congelar Coluna\",\"preco\":100"),
+                r.corpo());
+        assertTrue(r.corpo().contains("\"id\":\"poder-extra\",\"nome\":\"Peça Extra\",\"preco\":100"),
+                r.corpo());
+    }
+
+    @Test
+    void deveComprarUmPoderEMantelo() {
+        long id = criarJogador("CompraPoder");
+
+        Resposta r = comprar(id, "poder-queimar");
+
+        assertEquals(200, r.status(), r.corpo());
+        assertTrue(r.corpo().contains("\"moedas\":400"), r.corpo());
+        assertTrue(r.corpo().contains(
+                "\"id\":\"poder-queimar\",\"nome\":\"Queimar Peça\",\"preco\":100,\"possuido\":true,\"equipado\":false"),
+                r.corpo());
+        esperar(comprar(id, "poder-queimar"), 409, "ITEM_JA_POSSUIDO");
+    }
+
+    @Test
+    void poderNaoSeEquipa() {
+        long id = criarJogador("EquipaPoder");
+        assertEquals(200, comprar(id, "poder-extra").status());
+
+        esperar(equipar(id, "poder", "poder-extra"), 404, "ITEM_INEXISTENTE");
+    }
+
+    @Test
+    void lojaListaOsTresPacotesDeMoedas() {
+        long id = criarJogador("Pacotes");
+
+        Resposta r = loja(id);
+
+        assertTrue(r.corpo().contains("\"pacotes\":[{\"id\":\"pacote-100\",\"moedas\":100,\"precoReais\":5}"),
+                r.corpo());
+        assertTrue(r.corpo().contains("{\"id\":\"pacote-500\",\"moedas\":500,\"precoReais\":20}"), r.corpo());
+        assertTrue(r.corpo().contains("{\"id\":\"pacote-1000\",\"moedas\":1000,\"precoReais\":40}"), r.corpo());
+    }
+
+    @Test
+    void compraSimuladaDePacoteSomaAsMoedas() {
+        long id = criarJogador("Moedas");
+
+        assertTrue(comprarMoedas(id, "pacote-100").corpo().contains("\"moedas\":600"));
+        assertTrue(comprarMoedas(id, "pacote-500").corpo().contains("\"moedas\":1100"));
+        Resposta r = comprarMoedas(id, "pacote-1000");
+
+        assertEquals(200, r.status(), r.corpo());
+        assertTrue(r.corpo().contains("\"moedas\":2100"), r.corpo());
+        // o perfil mostra o mesmo saldo
+        assertTrue(get("/jogadores/" + id + "/perfil").corpo().contains("\"moedas\":2100"));
+    }
+
+    @Test
+    void moedasCompradasPermitemComprarOQueAntesNaoCabia() {
+        long id = criarJogador("Rico");
+        esperar(comprar(id, "avatar-dourado"), 409, "SALDO_INSUFICIENTE"); // custa 520, tem 500
+
+        assertEquals(200, comprarMoedas(id, "pacote-100").status());
+        Resposta r = comprar(id, "avatar-dourado");
+
+        assertEquals(200, r.status(), r.corpo());
+        assertTrue(r.corpo().contains("\"moedas\":80"), r.corpo());
+    }
+
+    @Test
+    void pacoteInexistenteEhRecusadoESemCobrarNada() {
+        long id = criarJogador("SemPacote");
+
+        esperar(comprarMoedas(id, "pacote-9999"), 404, "PACOTE_INEXISTENTE");
+
+        assertTrue(loja(id).corpo().contains("\"moedas\":500"));
+    }
+
+    @Test
+    void compraDePacoteSemOIdEhRecusada() {
+        long id = criarJogador("SemId");
+
+        esperar(enviar("POST", "/jogadores/" + id + "/loja/moedas", "{}"), 400, "DADOS_INVALIDOS");
+    }
+
+    @Test
     void jogadorInexistenteDevolve404() {
         esperar(loja(999999999L), 404, "JOGADOR_NAO_ENCONTRADO");
         esperar(comprar(999999999L, "avatar-folhas"), 404, "JOGADOR_NAO_ENCONTRADO");
+        esperar(comprarMoedas(999999999L, "pacote-100"), 404, "JOGADOR_NAO_ENCONTRADO");
     }
 }

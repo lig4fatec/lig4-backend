@@ -24,11 +24,16 @@ Base local: `http://localhost:8080`. A API também está descrita no Swagger (`/
 | `GET /jogadores/{id}/perfil` | | `{id, email, nick, nomeCompleto, bio, cor, vitorias, derrotas, moedas}` |
 | `PUT /jogadores/{id}/perfil` | `{nick (até 20), nomeCompleto (até 100), bio (até 280), cor}` | perfil atualizado |
 | `GET /jogadores/{id}/historico?filtro=todos\|online\|diario` | | `{partidas:[{id, data, adversario, resultado, jogadas, modo}]}`; `resultado` é `VITORIA`, `DERROTA` ou `EMPATE` |
-| `GET /jogadores/{id}/loja` | | `{moedas, equipados:{avatar,board,emote}, categorias:[{id, nome, itens:[{id, nome, preco, possuido, equipado}]}]}` |
+| `GET /jogadores/{id}/loja` | | `{moedas, equipados:{avatar,board,emote}, categorias:[{id, nome, itens:[{id, nome, preco, possuido, equipado}]}], pacotes:[{id, moedas, precoReais}]}` |
 | `POST /jogadores/{id}/loja/comprar` | `{itemId}` | loja atualizada |
+| `POST /jogadores/{id}/loja/moedas` | `{pacoteId}` | loja atualizada (compra simulada de moedas) |
 | `PUT /jogadores/{id}/loja/equipar` | `{categoria, itemId}` | loja atualizada |
 
 Também existem `GET /jogadores`, `POST /jogadores`, `PUT /jogadores/{id}`, `DELETE /jogadores/{id}` e `PUT /jogadores/{id}/cor` (cor em `#RRGGBB`, formato antigo; o front usa o perfil).
+
+**Categorias da loja:** `avatar`, `board`, `emote` e `poder`. Os poderes (`poder-queimar` "Queimar Peça", `poder-congelar` "Congelar Coluna" e `poder-extra` "Peça Extra") custam 100 moedas cada, são comprados uma vez e ficam para sempre. Eles não se equipam (`PUT .../equipar` devolve `ITEM_INEXISTENTE`) e só são usados no modo Caos.
+
+**Compra de moedas (simulada):** não existe pagamento de verdade, o pacote escolhido só soma ao saldo. Pacotes: `pacote-100` (100 moedas, R$ 5), `pacote-500` (500 moedas, R$ 20) e `pacote-1000` (1000 moedas, R$ 40). Pacote desconhecido devolve `404 PACOTE_INEXISTENTE`.
 
 Moedas: cada jogador começa com 500. Ao fim de cada partida: no Clássico, vitória +15, empate +5 e derrota +2; no Caos, vitória +30, empate +10 e derrota +5.
 
@@ -97,7 +102,7 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 | 400 | `DADOS_INVALIDOS`, `REQUISICAO_INVALIDA`, `EMAIL_INVALIDO`, `SENHA_INVALIDA`, `NICK_INVALIDO`, `COR_INVALIDA`, `FILTRO_INVALIDO`, `PIN_INVALIDO`, `MODO_INVALIDO`, `PARTIDA_INVALIDA`, `COLUNA_INVALIDA`, `COLUNA_CHEIA` |
 | 401 | `CREDENCIAIS_INVALIDAS` |
 | 403 | `SEM_PERMISSAO` |
-| 404 | `JOGADOR_NAO_ENCONTRADO`, `PARTIDA_NAO_ENCONTRADA`, `PIN_NAO_ENCONTRADO`, `ITEM_INEXISTENTE` |
+| 404 | `JOGADOR_NAO_ENCONTRADO`, `PARTIDA_NAO_ENCONTRADA`, `PIN_NAO_ENCONTRADO`, `ITEM_INEXISTENTE`, `PACOTE_INEXISTENTE` |
 | 409 | `EMAIL_JA_CADASTRADO`, `SALA_CHEIA`, `COR_JA_ESCOLHIDA`, `SEM_CONVIDADO`, `FASE_INVALIDA`, `JOGO_ENCERRADO`, `FORA_DO_TURNO`, `EMPATE_JA_PROPOSTO`, `EMPATE_PENDENTE`, `SEM_PROPOSTA_DE_EMPATE`, `ITEM_NAO_POSSUIDO`, `ITEM_JA_POSSUIDO`, `SALDO_INSUFICIENTE` |
 | 500 | `ERRO_INTERNO` |
 

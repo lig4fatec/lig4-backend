@@ -12,6 +12,10 @@ public final class CatalogoLoja {
     public record Categoria(String id, String nome, List<Item> itens) {
     }
 
+    /** Pacote de moedas vendido na loja. A compra é simulada: não há cobrança real. */
+    public record Pacote(String id, int moedas, int precoReais) {
+    }
+
     public static final List<Categoria> CATEGORIAS = List.of(
             new Categoria("avatar", "Avatares", List.of(
                     new Item("avatar-classico", "avatar", "Clássico", 0),
@@ -27,9 +31,25 @@ public final class CatalogoLoja {
                     new Item("emote-saudacao", "emote", "Saudação", 0),
                     new Item("emote-boa-partida", "emote", "Boa partida", 100),
                     new Item("emote-concentracao", "emote", "Concentração", 230),
-                    new Item("emote-vitoria", "emote", "Vitória", 400))));
+                    new Item("emote-vitoria", "emote", "Vitória", 400))),
+            // Poderes do modo Caos: comprados uma vez, ficam para sempre (cada um vale 1 uso por partida).
+            new Categoria("poder", "Poderes", List.of(
+                    new Item("poder-queimar", "poder", "Queimar Peça", 100),
+                    new Item("poder-congelar", "poder", "Congelar Coluna", 100),
+                    new Item("poder-extra", "poder", "Peça Extra", 100))));
+
+    public static final List<Pacote> PACOTES = List.of(
+            new Pacote("pacote-100", 100, 5),
+            new Pacote("pacote-500", 500, 20),
+            new Pacote("pacote-1000", 1000, 40));
 
     private CatalogoLoja() {
+    }
+
+    public static Optional<Pacote> buscarPacote(String pacoteId) {
+        return PACOTES.stream()
+                .filter(pacote -> pacote.id().equals(pacoteId))
+                .findFirst();
     }
 
     public static Optional<Item> buscar(String itemId) {

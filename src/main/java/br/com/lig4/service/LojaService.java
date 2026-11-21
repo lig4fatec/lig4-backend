@@ -3,6 +3,7 @@ package br.com.lig4.service;
 import br.com.lig4.domain.CatalogoLoja;
 import br.com.lig4.domain.ItemJogador;
 import br.com.lig4.domain.Jogador;
+import br.com.lig4.dto.LojaCompraMoedasRequestDTO;
 import br.com.lig4.dto.LojaCompraRequestDTO;
 import br.com.lig4.dto.LojaEquiparRequestDTO;
 import br.com.lig4.dto.LojaResponseDTO;
@@ -62,6 +63,22 @@ public class LojaService {
         return montar(jogador);
     }
 
+    /**
+     * Compra simulada de moedas: não há pagamento de verdade, o pacote escolhido só soma ao saldo.
+     * Um gateway de pagamento real ficaria fora do escopo do projeto.
+     */
+    @Transactional
+    public LojaResponseDTO comprarMoedas(Long jogadorId, LojaCompraMoedasRequestDTO dto) {
+        Jogador jogador = jogadores.buscarComLock(jogadorId)
+                .orElseThrow(() -> new JogadorNotFoundException(jogadorId));
+        CatalogoLoja.Pacote pacote = CatalogoLoja.buscarPacote(dto.pacoteId())
+                .orElseThrow(() -> new LojaInvalidaException(CodigoErro.PACOTE_INEXISTENTE,
+                        "Pacote inexistente: " + dto.pacoteId()));
+
+        jogador.moedas += pacote.moedas();
+        return montar(jogador);
+    }
+
     @Transactional
     public LojaResponseDTO equipar(Long jogadorId, LojaEquiparRequestDTO dto) {
         Jogador jogador = jogadores.buscarComLock(jogadorId)
@@ -70,6 +87,10 @@ public class LojaService {
                 .filter(encontrado -> encontrado.categoria().equals(dto.categoria()))
                 .orElseThrow(() -> itemInexistente(dto.itemId()));
 
+        if (item.categoria().equals("poder")) {
+            throw new LojaInvalidaException(CodigoErro.ITEM_INEXISTENTE,
+                    "Poderes não são equipados: quem os comprou pode usá-los nas partidas do modo Caos");
+        }
         if (!possui(jogador, item)) {
             throw new LojaInvalidaException(CodigoErro.ITEM_NAO_POSSUIDO,
                     "Este item não está na sua coleção");
@@ -116,6 +137,10 @@ public class LojaService {
                                 .toList()))
                 .toList();
 
-        return new LojaResponseDTO(jogador.moedas, equipados, categorias);
+        List<LojaResponseDTO.Pacote> pacotes = CatalogoLoja.PACOTES.stream()
+                .map(pacote -> new LojaResponseDTO.Pacote(pacote.id(), pacote.moedas(), pacote.precoReais()))
+                .toList();
+
+        return new LojaResponseDTO(jogador.moedas, equipados, categorias, pacotes);
     }
 }

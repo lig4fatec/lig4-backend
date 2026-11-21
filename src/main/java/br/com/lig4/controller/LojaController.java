@@ -1,5 +1,6 @@
 package br.com.lig4.controller;
 
+import br.com.lig4.dto.LojaCompraMoedasRequestDTO;
 import br.com.lig4.dto.LojaCompraRequestDTO;
 import br.com.lig4.dto.LojaEquiparRequestDTO;
 import br.com.lig4.dto.LojaResponseDTO;
@@ -31,6 +32,12 @@ public class LojaController {
     @PostMapping("/comprar")
     public LojaResponseDTO comprar(@PathVariable Long id, @Valid @RequestBody LojaCompraRequestDTO dto) {
         return service.comprar(id, dto);
+    }
+
+    @PostMapping("/moedas")
+    public LojaResponseDTO comprarMoedas(@PathVariable Long id,
+                                         @Valid @RequestBody LojaCompraMoedasRequestDTO dto) {
+        return service.comprarMoedas(id, dto);
     }
 
     @PutMapping("/equipar")
