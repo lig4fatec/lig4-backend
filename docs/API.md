@@ -13,7 +13,7 @@ Base local: `http://localhost:8080`. A API também está descrita no Swagger (`/
 
 | Método e rota | Corpo | Resposta |
 |---|---|---|
-| `POST /auth/cadastro` | `{email, senha}` (senha de 6 a 72 caracteres) | 201, jogador |
+| `POST /auth/cadastro` | `{email, senha, nick}` (senha de 6 a 72; `nick` opcional, de 3 a 20) | 201, jogador |
 | `POST /auth/login` | `{email, senha}` | 200, jogador; 401 `CREDENCIAIS_INVALIDAS` |
 
 ## Jogador, perfil, histórico e loja

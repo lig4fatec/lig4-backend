@@ -35,7 +35,7 @@ public class AuthService {
 
         Jogador jogador = new Jogador();
         jogador.email = email;
-        jogador.nome = nomeInicial(email);
+        jogador.nome = apelidoEscolhido(dto.nick(), email);
         jogador.senhaHash = encoder.encode(dto.senha());
         repository.save(jogador);
 
@@ -57,10 +57,18 @@ public class AuthService {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
     }
 
-    /** O front só envia e-mail e senha; o nick começa como a parte antes do @ (o perfil muda depois). */
+     /** Sem apelido no cadastro, o nick começa como a parte antes do @ (o perfil muda depois). */
     private String nomeInicial(String email) {
         int arroba = email.indexOf('@');
         String base = arroba > 0 ? email.substring(0, arroba) : email;
         return base.length() > TAMANHO_MAXIMO_NICK ? base.substring(0, TAMANHO_MAXIMO_NICK) : base;
+    }
+
+    /** Usa o apelido escolhido no cadastro, se veio; senão, o nome inicial derivado do e-mail. */
+    private String apelidoEscolhido(String nick, String email) {
+        if (nick != null && !nick.isBlank()) {
+            return nick.trim();
+        }
+        return nomeInicial(email);
     }
 }
