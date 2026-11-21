@@ -84,7 +84,7 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 
 **Poderes do Caos:** só existem no modo Caos e precisam ter sido comprados na loja (`poder-queimar`, `poder-congelar`, `poder-extra`). Cada jogador usa cada poder **uma vez por partida**, só na sua vez e **antes de soltar peça** nessa vez. O estado traz `poderesUsados` e `poderesDisponiveis` (lista de `{jogadorId, poder}`; os disponíveis são os comprados e ainda não usados, e vêm vazios no Clássico e depois do fim), `congelamentos` (lista de `{coluna, jogadorId, turnosRestantes}`) e `pecaExtraAtiva`.
 
-- `QUEIMAR`: informe `coluna` e `linha` (linha 0 é a **base** da coluna, a mesma numeração de `linha` nas jogadas) de uma peça do **adversário**. A peça some e a vez passa ao adversário. As peças de cima não descem; a próxima peça jogada na coluna cai na casa vazia. Alvo vazio, peça própria ou fora do tabuleiro devolve `ALVO_INVALIDO` (por isso não funciona antes de existir peça do adversário).
+- `QUEIMAR`: informe `coluna` e `linha` (linha 0 é a **base** da coluna, a mesma numeração de `linha` nas jogadas) de uma peça do **adversário**. A peça some, as peças de cima descem para preencher o buraco (gravidade) e a vez passa ao adversário. Se a queda formar um 4 em linha, a partida termina ali (regra "física pura"): vence a cor do 4, **mesmo que seja a do adversário de quem queimou** (`motivoFim` `VITORIA`, moedas pagas como numa vitória); se as duas cores formarem um 4, vence o adversário de quem queimou. Alvo vazio, peça própria ou fora do tabuleiro devolve `ALVO_INVALIDO` (por isso não funciona antes de existir peça do adversário).
 - `CONGELAR`: informe a `coluna`. O adversário não pode jogar nela nas **próximas 3 vezes dele**, e a vez passa a ele. Coluna cheia devolve `COLUNA_CHEIA`. Jogar numa coluna congelada devolve `COLUNA_CONGELADA`. Se o adversário só tiver colunas congeladas para jogar, ele perde a vez (conta como uma das 3).
 - `EXTRA` (o "Jogar 2x" do front): sem alvo. Não gasta a vez: `pecaExtraAtiva` fica `true`, o mesmo jogador joga duas peças seguidas e depois a vez passa. Não vale com menos de 2 casas livres (`PECA_EXTRA_SEM_ESPACO`). Se a primeira peça já ganha ou enche o tabuleiro, a partida termina ali.
 - Usar poder depois de receber uma proposta de empate vale como recusá-la, como jogar. O relógio do jogador continua correndo enquanto ele usa o poder.
@@ -122,7 +122,6 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 ## Limitações conhecidas
 
 - Não há token: qualquer cliente pode enviar o `jogadorId` de outro jogador.
-- Partida abandonada (sem relógio, criada antes do relógio) não é finalizada e não conta nas estatísticas nem dá moedas. Partidas novas terminam sozinhas por tempo.
-- Queimar Peça não tem gravidade: a casa queimada fica vazia e as peças de cima continuam no lugar.
+- Partida abandonada (sem relógio, criada antes do relógio) não é finalizada e não conta nas estatísticas nem dá moedas. - -  -Partidas novas terminam sozinhas por tempo.
 - O desafio diário não existe no back-end (`filtro=diario` devolve lista vazia).
 - A sala é consultada por polling; o WebSocket existe só para a partida.

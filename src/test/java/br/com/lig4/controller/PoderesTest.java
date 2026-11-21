@@ -209,4 +209,26 @@ class PoderesTest extends ApiTestSupport {
         assertTrue(historico.contains("\"tipo\":\"CONGELAR\""), historico);
         assertTrue(historico.contains("\"tipo\":\"PECA\""), historico);
     }
+
+        @Test
+    void queimarFazAsPecasDeCimaDescerem() {
+        long j1 = criarJogador("PoderU");
+        long j2 = criarJogador("PoderV");
+        comprar(j1, "poder-queimar");
+        long partida = partida(j1, j2, "CAOS");
+        assertEquals(201, jogar(partida, j1, 0).status()); // V na base da col0
+        assertEquals(201, jogar(partida, j2, 1).status()); // A na base da col1
+        assertEquals(201, jogar(partida, j1, 1).status()); // V acima na col1
+        assertEquals(201, jogar(partida, j2, 6).status()); // A em outra coluna; a vez volta a j1
+
+        Resposta r = poder(partida, j1, "QUEIMAR", 1, 0); // queima o A da base da col1; o V desce
+
+        assertEquals(200, r.status(), r.corpo());
+        assertTrue(r.corpo().contains("\"statusPartida\":\"EM_ANDAMENTO\""), r.corpo());
+        assertTrue(r.corpo().contains("\"proximoJogadorId\":" + j2), r.corpo());
+
+        Resposta drop = jogar(partida, j2, 1); // a próxima peça cai por cima do V que desceu
+        assertEquals(201, drop.status(), drop.corpo());
+        assertTrue(drop.corpo().contains("\"linha\":1"), drop.corpo());
+    }
 }

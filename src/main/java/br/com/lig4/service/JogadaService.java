@@ -303,4 +303,25 @@ public class JogadaService {
         String cor = jogador.id.equals(sala.dono.id) ? sala.corDono : sala.corConvidado;
         return new JogadorResumoDTO(jogador.id, jogador.nome, cor);
     }
+
+        /**
+     * Fecha a partida quando o motor terminou numa jogada ou num poder: grava o vencedor e o motivo,
+     * para o relógio, paga as moedas e encerra a sala de origem. O vencedor vem do motor, porque no
+     * Queimar por física pura ele pode ser o adversário de quem usou o poder.
+     */
+    void finalizarPeloMotor(Partida partida, Jogo jogo, Jogador autor, Instant agora) {
+        relogio.passar(partida, autor, null, agora);
+        partida.status = StatusPartida.FINALIZADA;
+        partida.finalizadoEm = Instant.now();
+        partida.empatePendenteDe = null;
+        if (jogo.getStatus() == StatusJogo.VENCEDOR) {
+            Long vencedorId = jogadorDe(partida, jogo.getVencedor());
+            partida.vencedor = vencedorId.equals(partida.jogadorUm.id) ? partida.jogadorUm : partida.jogadorDois;
+            partida.motivoFim = MotivoFim.VITORIA;
+        } else {
+            partida.motivoFim = MotivoFim.TABULEIRO_CHEIO;
+        }
+        recompensas.conceder(partida);
+        salaRepository.findByPartidaId(partida.id).ifPresent(sala -> sala.fase = FaseSala.ENCERRADA);
+    }
 }
