@@ -63,9 +63,10 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 
 | Método e rota | Corpo | Resposta |
 |---|---|---|
-| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, modo, motivoFim, empatePropostoPor, empatesUsados, relogioDe, tempoJogadorUmMs, tempoJogadorDoisMs}` |
-| `POST /partidas/{id}/jogadas` | `{jogadorId, coluna (0 a 6)}` | 201, jogada com o tabuleiro novo, `relogioDe` e os tempos |
-| `GET /partidas/{id}/jogadas` | | jogadas em ordem |
+| `GET /partidas/{id}/estado` | | `{partidaId, jogadorUm, jogadorDois, statusPartida, resultado, vencedorId, proximoJogadorId, totalJogadas, tabuleiro, pin, modo, motivoFim, empatePropostoPor, empatesUsados, relogioDe, tempoJogadorUmMs, tempoJogadorDoisMs, poderesUsados, poderesDisponiveis, congelamentos, pecaExtraAtiva}` |
+| `POST /partidas/{id}/jogadas` | `{jogadorId, coluna (0 a 6)}` | 201, jogada com o tabuleiro novo, `relogioDe`, os tempos, `congelamentos` e `pecaExtraAtiva` |
+| `GET /partidas/{id}/jogadas` | | jogadas em ordem, cada uma com `tipo` (`PECA`, `QUEIMAR`, `CONGELAR` ou `EXTRA`) |
+| `POST /partidas/{id}/poderes` | `{jogadorId, poder (QUEIMAR, CONGELAR ou EXTRA), coluna, linha}` | estado (usa um poder do Caos) |
 | `POST /partidas/{id}/desistir` | `{jogadorId}` | estado (o adversário vence) |
 | `POST /partidas/{id}/empate` | `{jogadorId}` | estado (propõe empate) |
 | `POST /partidas/{id}/empate/aceitar` | `{jogadorId}` | estado (partida empatada) |
@@ -81,6 +82,15 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 
 **Proposta de empate:** cada jogador pode propor uma vez por partida (`EMPATE_JA_PROPOSTO` na segunda) e só uma proposta fica aberta por vez (`EMPATE_PENDENTE`). Enquanto aberta, o estado traz `empatePropostoPor` com o id de quem propôs. O adversário aceita (a partida termina em `EMPATE` com `motivoFim` `EMPATE_ACORDADO` e moedas de empate) ou recusa (a proposta some e a partida continua). Se o adversário jogar sem responder, vale como recusa. Aceitar ou recusar sem proposta do adversário devolve `SEM_PROPOSTA_DE_EMPATE`. `empatesUsados` lista os ids que já gastaram a proposta, para o front desabilitar o botão.
 
+**Poderes do Caos:** só existem no modo Caos e precisam ter sido comprados na loja (`poder-queimar`, `poder-congelar`, `poder-extra`). Cada jogador usa cada poder **uma vez por partida**, só na sua vez e **antes de soltar peça** nessa vez. O estado traz `poderesUsados` e `poderesDisponiveis` (lista de `{jogadorId, poder}`; os disponíveis são os comprados e ainda não usados, e vêm vazios no Clássico e depois do fim), `congelamentos` (lista de `{coluna, jogadorId, turnosRestantes}`) e `pecaExtraAtiva`.
+
+- `QUEIMAR`: informe `coluna` e `linha` (linha 0 é a **base** da coluna, a mesma numeração de `linha` nas jogadas) de uma peça do **adversário**. A peça some e a vez passa ao adversário. As peças de cima não descem; a próxima peça jogada na coluna cai na casa vazia. Alvo vazio, peça própria ou fora do tabuleiro devolve `ALVO_INVALIDO` (por isso não funciona antes de existir peça do adversário).
+- `CONGELAR`: informe a `coluna`. O adversário não pode jogar nela nas **próximas 3 vezes dele**, e a vez passa a ele. Coluna cheia devolve `COLUNA_CHEIA`. Jogar numa coluna congelada devolve `COLUNA_CONGELADA`. Se o adversário só tiver colunas congeladas para jogar, ele perde a vez (conta como uma das 3).
+- `EXTRA` (o "Jogar 2x" do front): sem alvo. Não gasta a vez: `pecaExtraAtiva` fica `true`, o mesmo jogador joga duas peças seguidas e depois a vez passa. Não vale com menos de 2 casas livres (`PECA_EXTRA_SEM_ESPACO`). Se a primeira peça já ganha ou enche o tabuleiro, a partida termina ali.
+- Usar poder depois de receber uma proposta de empate vale como recusá-la, como jogar. O relógio do jogador continua correndo enquanto ele usa o poder.
+- Erros: `PODER_INVALIDO` (400, poder desconhecido ou alvo faltando), `MODO_SEM_PODERES`, `PODER_NAO_POSSUIDO`, `PODER_JA_USADO`, `PODER_FORA_DE_HORA`, `ALVO_INVALIDO`, `COLUNA_CONGELADA`, `PECA_EXTRA_SEM_ESPACO` (409), além de `FORA_DO_TURNO` e `JOGO_ENCERRADO`.
+- `totalJogadas` e o histórico do perfil contam só as peças soltas, não os poderes. Em `GET /partidas/{id}/jogadas`, nos poderes `coluna` e `linha` guardam o alvo (`CONGELAR` só tem coluna; `EXTRA` vem com 0 e 0) e `numero` conta peças e poderes juntos.
+
 Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP fazem o mesmo e também avisam quem está conectado.
 
 ## WebSocket da partida
@@ -92,7 +102,8 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 | Servidor → cliente, ao conectar | `{"tipo":"ESTADO","dados":{...estado...}}` |
 | Cliente → servidor | `{"tipo":"JOGAR","coluna":3}` ou `{"tipo":"ESTADO"}` |
 | Cliente → servidor | `{"tipo":"DESISTIR"}`, `{"tipo":"PROPOR_EMPATE"}`, `{"tipo":"ACEITAR_EMPATE"}` ou `{"tipo":"RECUSAR_EMPATE"}` |
-| Servidor → os dois, depois de desistir, de uma ação de empate ou do fim por tempo | `{"tipo":"ESTADO","dados":{...estado...}}` |
+| Cliente → servidor | `{"tipo":"PODER","poder":"QUEIMAR","coluna":3,"linha":0}`, `{"tipo":"PODER","poder":"CONGELAR","coluna":3}` ou `{"tipo":"PODER","poder":"EXTRA"}` |
+| Servidor → os dois, depois de desistir, de uma ação de empate, de um poder ou do fim por tempo | `{"tipo":"ESTADO","dados":{...estado...}}` |
 | Servidor → os dois | `{"tipo":"JOGADA","dados":{...jogada...}}` |
 | Servidor → quem errou | `{"tipo":"ERRO","codigo":"...","mensagem":"..."}` |
 | Servidor → os conectados, ao conectar ou desconectar alguém | `{"tipo":"PRESENCA","dados":{"conectados":[12,15]}}` |
@@ -101,16 +112,17 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 
 | Status | Códigos |
 |---|---|
-| 400 | `DADOS_INVALIDOS`, `REQUISICAO_INVALIDA`, `EMAIL_INVALIDO`, `SENHA_INVALIDA`, `NICK_INVALIDO`, `COR_INVALIDA`, `FILTRO_INVALIDO`, `PIN_INVALIDO`, `MODO_INVALIDO`, `PARTIDA_INVALIDA`, `COLUNA_INVALIDA`, `COLUNA_CHEIA` |
+| 400 | `DADOS_INVALIDOS`, `REQUISICAO_INVALIDA`, `EMAIL_INVALIDO`, `SENHA_INVALIDA`, `NICK_INVALIDO`, `COR_INVALIDA`, `FILTRO_INVALIDO`, `PIN_INVALIDO`, `MODO_INVALIDO`, `PARTIDA_INVALIDA`, `COLUNA_INVALIDA`, `COLUNA_CHEIA`, `PODER_INVALIDO` |
 | 401 | `CREDENCIAIS_INVALIDAS` |
 | 403 | `SEM_PERMISSAO` |
 | 404 | `JOGADOR_NAO_ENCONTRADO`, `PARTIDA_NAO_ENCONTRADA`, `PIN_NAO_ENCONTRADO`, `ITEM_INEXISTENTE`, `PACOTE_INEXISTENTE` |
-| 409 | `EMAIL_JA_CADASTRADO`, `SALA_CHEIA`, `COR_JA_ESCOLHIDA`, `SEM_CONVIDADO`, `FASE_INVALIDA`, `JOGO_ENCERRADO`, `FORA_DO_TURNO`, `EMPATE_JA_PROPOSTO`, `EMPATE_PENDENTE`, `SEM_PROPOSTA_DE_EMPATE`, `ITEM_NAO_POSSUIDO`, `ITEM_JA_POSSUIDO`, `SALDO_INSUFICIENTE` |
+| 409 | `EMAIL_JA_CADASTRADO`, `SALA_CHEIA`, `COR_JA_ESCOLHIDA`, `SEM_CONVIDADO`, `FASE_INVALIDA`, `JOGO_ENCERRADO`, `FORA_DO_TURNO`, `EMPATE_JA_PROPOSTO`, `EMPATE_PENDENTE`, `SEM_PROPOSTA_DE_EMPATE`, `MODO_SEM_PODERES`, `PODER_NAO_POSSUIDO`, `PODER_JA_USADO`, `PODER_FORA_DE_HORA`, `ALVO_INVALIDO`, `COLUNA_CONGELADA`, `PECA_EXTRA_SEM_ESPACO`, `ITEM_NAO_POSSUIDO`, `ITEM_JA_POSSUIDO`, `SALDO_INSUFICIENTE` |
 | 500 | `ERRO_INTERNO` |
 
 ## Limitações conhecidas
 
 - Não há token: qualquer cliente pode enviar o `jogadorId` de outro jogador.
 - Partida abandonada (sem relógio, criada antes do relógio) não é finalizada e não conta nas estatísticas nem dá moedas. Partidas novas terminam sozinhas por tempo.
+- Queimar Peça não tem gravidade: a casa queimada fica vazia e as peças de cima continuam no lugar.
 - O desafio diário não existe no back-end (`filtro=diario` devolve lista vazia).
 - A sala é consultada por polling; o WebSocket existe só para a partida.

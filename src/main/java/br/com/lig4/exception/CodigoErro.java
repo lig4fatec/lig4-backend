@@ -38,11 +38,20 @@ public enum CodigoErro {
     EMPATE_JA_PROPOSTO,
     EMPATE_PENDENTE,
     SEM_PROPOSTA_DE_EMPATE,
+    // poderes do modo Caos
+    PODER_INVALIDO,
+    PODER_NAO_POSSUIDO,
+    MODO_SEM_PODERES,
     // motivos de jogada inválida (mesmos nomes de JogadaInvalidaException.Motivo)
     JOGO_ENCERRADO,
     FORA_DO_TURNO,
     COLUNA_INVALIDA,
-    COLUNA_CHEIA;
+    COLUNA_CHEIA,
+    COLUNA_CONGELADA,
+    PODER_JA_USADO,
+    PODER_FORA_DE_HORA,
+    ALVO_INVALIDO,
+    PECA_EXTRA_SEM_ESPACO;
 
     public static CodigoErro de(RuntimeException e) {
         if (e instanceof JogadorNotFoundException) {

@@ -52,7 +52,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AcaoPartidaInvalidaException.class)
     public ResponseEntity<ErroResponse> acaoInvalida(AcaoPartidaInvalidaException e) {
-        return resposta(HttpStatus.CONFLICT, e.codigo(), e.getMessage());
+        HttpStatus status = e.codigo() == CodigoErro.PODER_INVALIDO ? HttpStatus.BAD_REQUEST : HttpStatus.CONFLICT;
+        return resposta(status, e.codigo(), e.getMessage());
     }
 
     @ExceptionHandler(SalaInvalidaException.class)
@@ -84,7 +85,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(JogadaInvalidaException.class)
     public ResponseEntity<ErroResponse> jogadaInvalida(JogadaInvalidaException e) {
         HttpStatus status = switch (e.getMotivo()) {
-            case JOGO_ENCERRADO, FORA_DO_TURNO -> HttpStatus.CONFLICT;
+            case JOGO_ENCERRADO, FORA_DO_TURNO, COLUNA_CONGELADA, PODER_JA_USADO, PODER_FORA_DE_HORA,
+                 ALVO_INVALIDO, PECA_EXTRA_SEM_ESPACO -> HttpStatus.CONFLICT;
             case COLUNA_INVALIDA, COLUNA_CHEIA -> HttpStatus.BAD_REQUEST;
         };
         return resposta(status, CodigoErro.de(e), e.getMessage());

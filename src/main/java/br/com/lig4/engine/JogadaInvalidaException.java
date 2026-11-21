@@ -7,7 +7,13 @@ public class JogadaInvalidaException extends RuntimeException {
         JOGO_ENCERRADO,
         FORA_DO_TURNO,
         COLUNA_INVALIDA,
-        COLUNA_CHEIA
+        COLUNA_CHEIA,
+        // poderes do modo Caos
+        COLUNA_CONGELADA,
+        PODER_JA_USADO,
+        PODER_FORA_DE_HORA,
+        ALVO_INVALIDO,
+        PECA_EXTRA_SEM_ESPACO
     }
 
     private final Motivo motivo;

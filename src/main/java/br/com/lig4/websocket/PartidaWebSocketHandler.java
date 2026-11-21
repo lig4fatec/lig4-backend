@@ -3,6 +3,7 @@ package br.com.lig4.websocket;
 import br.com.lig4.dto.JogadaRequestDTO;
 import br.com.lig4.dto.JogadaResponseDTO;
 import br.com.lig4.dto.PartidaEstadoDTO;
+import br.com.lig4.dto.PoderRequestDTO;
 import br.com.lig4.engine.JogadaInvalidaException;
 import br.com.lig4.exception.AcaoPartidaInvalidaException;
 import br.com.lig4.exception.CodigoErro;
@@ -11,6 +12,7 @@ import br.com.lig4.exception.PartidaInvalidaException;
 import br.com.lig4.exception.PartidaNotFoundException;
 import br.com.lig4.service.JogadaService;
 import br.com.lig4.service.PartidaAcaoService;
+import br.com.lig4.service.PoderService;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
@@ -41,7 +43,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     private static final String ATTR_JOGADOR = "jogadorId";
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Comando(String tipo, Integer coluna) {
+    record Comando(String tipo, Integer coluna, Integer linha, String poder) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -53,13 +55,15 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
 
     private final JogadaService jogadaService;
     private final PartidaAcaoService acaoService;
+    private final PoderService poderService;
     private final ObjectMapper mapper;
     private final Map<Long, Set<WebSocketSession>> salas = new ConcurrentHashMap<>();
 
     public PartidaWebSocketHandler(JogadaService jogadaService, PartidaAcaoService acaoService,
-                                   ObjectMapper mapper) {
+                                   PoderService poderService, ObjectMapper mapper) {
         this.jogadaService = jogadaService;
         this.acaoService = acaoService;
+        this.poderService = poderService;
         this.mapper = mapper;
     }
 
@@ -107,6 +111,14 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
                     log.info("Jogada aceita: partida={} jogador={} coluna={} resultado={}",
                             partidaId, jogadorId, comando.coluna(), resultado.resultado());
                     transmitir(partidaId, new Mensagem("JOGADA", resultado, null));
+                }
+                case "PODER" -> {
+                    if (comando.poder() == null) {
+                        throw new PartidaInvalidaException("Informe o poder (QUEIMAR, CONGELAR ou EXTRA).");
+                    }
+                    transmitirEstado(partidaId, poderService.usar(partidaId,
+                            new PoderRequestDTO(jogadorId, comando.poder(), comando.coluna(), comando.linha())));
+                    log.info("Poder usado: partida={} jogador={} poder={}", partidaId, jogadorId, comando.poder());
                 }
                 case "DESISTIR" -> {
                     transmitirEstado(partidaId, acaoService.desistir(partidaId, jogadorId));

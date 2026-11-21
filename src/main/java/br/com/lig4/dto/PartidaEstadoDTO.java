@@ -34,6 +34,14 @@ public record PartidaEstadoDTO(
         /** Tempo que o jogador 1 ainda tem, em milissegundos. */
         long tempoJogadorUmMs,
         /** Tempo que o jogador 2 ainda tem, em milissegundos. */
-        long tempoJogadorDoisMs
+        long tempoJogadorDoisMs,
+        /** Poderes já usados na partida, de cada jogador. */
+        List<PoderDTO> poderesUsados,
+        /** Poderes que cada jogador comprou e ainda pode usar (vazio fora do Caos e depois do fim). */
+        List<PoderDTO> poderesDisponiveis,
+        /** Colunas congeladas agora. */
+        List<CongelamentoDTO> congelamentos,
+        /** Verdadeiro quando o jogador da vez usou a Peça Extra e ainda vai soltar duas peças. */
+        boolean pecaExtraAtiva
 ) {
 }

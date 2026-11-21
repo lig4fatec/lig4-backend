@@ -2,6 +2,8 @@ package br.com.lig4.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,6 +33,11 @@ public class JogadaRegistro {
     /** Ordem da jogada na partida: 1, 2, 3... */
     @Column(nullable = false)
     public int numero;
+
+    /** Peça solta ou poder usado. */
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    public TipoJogada tipo = TipoJogada.PECA;
 
     @Column(nullable = false)
     public int coluna;

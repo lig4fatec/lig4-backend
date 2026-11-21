@@ -47,6 +47,27 @@ public class Tabuleiro {
         return true;
     }
 
+    /** Tira a peça de uma posição (poder Queimar). */
+    public void remover(int linha, int coluna) {
+        grade[linha][coluna] = null;
+    }
+
+    /** Casas vazias que ainda dá para alcançar: as das colunas que não estão cheias. */
+    public int espacosLivres() {
+        int livres = 0;
+        for (int c = 0; c < COLUNAS; c++) {
+            if (colunaCheia(c)) {
+                continue;
+            }
+            for (int l = 0; l < LINHAS; l++) {
+                if (grade[l][c] == null) {
+                    livres++;
+                }
+            }
+        }
+        return livres;
+    }
+
     /** Cópia da grade como texto por linha (de cima para baixo), útil para enviar ao front-end. */
     public String[][] comoMatriz() {
         String[][] m = new String[LINHAS][COLUNAS];

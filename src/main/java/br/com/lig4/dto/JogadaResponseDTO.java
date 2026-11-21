@@ -3,6 +3,8 @@ package br.com.lig4.dto;
 import br.com.lig4.domain.StatusPartida;
 import br.com.lig4.engine.StatusJogo;
 
+import java.util.List;
+
 public record JogadaResponseDTO(
         int numero,
         Long jogadorId,
@@ -16,6 +18,10 @@ public record JogadaResponseDTO(
         /** De quem é o relógio que está correndo agora (o próximo a jogar); nulo se a partida terminou. */
         Long relogioDe,
         long tempoJogadorUmMs,
-        long tempoJogadorDoisMs
+        long tempoJogadorDoisMs,
+        /** Colunas congeladas depois desta jogada. */
+        List<CongelamentoDTO> congelamentos,
+        /** Verdadeiro se a vez continua com o mesmo jogador por causa da Peça Extra. */
+        boolean pecaExtraAtiva
 ) {
 }
