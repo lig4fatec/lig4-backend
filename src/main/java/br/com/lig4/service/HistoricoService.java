@@ -1,5 +1,6 @@
 package br.com.lig4.service;
 
+import br.com.lig4.domain.ModoJogo;
 import br.com.lig4.domain.Partida;
 import br.com.lig4.domain.ResultadoPartida;
 import br.com.lig4.dto.HistoricoPartidaDTO;
@@ -16,13 +17,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 @Service
 public class HistoricoService {
 
-    private static final String MODO_ONLINE = "online";
-    private static final Set<String> FILTROS = Set.of("todos", MODO_ONLINE, "diario");
+    private static final String FILTRO_TODOS = "todos";
 
     private final JogadorRepository jogadores;
     private final PartidaRepository partidas;
@@ -41,15 +40,23 @@ public class HistoricoService {
         if (!jogadores.existsById(jogadorId)) {
             throw new JogadorNotFoundException(jogadorId);
         }
-        String modo = filtro == null ? "todos" : filtro.trim().toLowerCase(Locale.ROOT);
-        if (!FILTROS.contains(modo)) {
-            throw new FiltroInvalidoException(filtro);
-        }
-        if (modo.equals("diario")) {
-            return new HistoricoResponseDTO(List.of()); // o desafio diário ainda não existe no back-end
+        // Filtro: "todos" ou o modo do jogo ("classico"/"caos"). O front manda esses valores.
+        String filtroNormalizado = filtro == null || filtro.isBlank()
+                ? FILTRO_TODOS
+                : filtro.trim().toLowerCase(Locale.ROOT);
+        ModoJogo modoFiltro = null;
+        if (!filtroNormalizado.equals(FILTRO_TODOS)) {
+            modoFiltro = ModoJogo.de(filtroNormalizado);
+            if (modoFiltro == null) {
+                throw new FiltroInvalidoException(filtro);
+            }
         }
 
         List<Partida> finalizadas = partidas.finalizadasDoJogador(jogadorId);
+        if (modoFiltro != null) {
+            ModoJogo alvo = modoFiltro;
+            finalizadas = finalizadas.stream().filter(partida -> partida.modo == alvo).toList();
+        }
         Map<Long, Integer> totalDeJogadas = contarJogadas(finalizadas);
 
         List<HistoricoPartidaDTO> itens = finalizadas.stream()
@@ -59,7 +66,7 @@ public class HistoricoService {
                         adversarioDe(partida, jogadorId),
                         resultadoDe(partida, jogadorId),
                         totalDeJogadas.getOrDefault(partida.id, 0),
-                        MODO_ONLINE))
+                        partida.modo))
                 .toList();
         return new HistoricoResponseDTO(itens);
     }
