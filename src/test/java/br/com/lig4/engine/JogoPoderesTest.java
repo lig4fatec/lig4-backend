@@ -126,13 +126,14 @@ class JogoPoderesTest {
     }
 
     @Test
-    void depoisDeQueimarAProximaPecaCaiNaCasaVazia() {
+    void depoisDeQueimarAsPecasDeCimaDescem() {
         Jogo jogo = new Jogo(VERMELHO);
         jogo.jogar(VERMELHO, 0);
         jogo.jogar(AMARELO, 0);
         jogo.jogar(VERMELHO, 2);
-        jogo.queimar(AMARELO, 0, 0);
-        assertEquals(0, jogo.jogar(VERMELHO, 0).linha());
+        jogo.queimar(AMARELO, 0, 0); // queima o vermelho da base; o amarelo de cima desce
+        assertEquals(AMARELO, jogo.getTabuleiro().get(0, 0));
+        assertEquals(1, jogo.jogar(VERMELHO, 0).linha()); // a próxima peça cai por cima
     }
 
     // Peça Extra

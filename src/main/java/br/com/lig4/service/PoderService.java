@@ -12,6 +12,7 @@ import br.com.lig4.engine.Disco;
 import br.com.lig4.engine.JogadaInvalidaException;
 import br.com.lig4.engine.Jogo;
 import br.com.lig4.engine.Poder;
+import br.com.lig4.engine.StatusJogo;
 import br.com.lig4.exception.AcaoPartidaInvalidaException;
 import br.com.lig4.exception.CodigoErro;
 import br.com.lig4.exception.JogadorNotFoundException;
@@ -116,8 +117,11 @@ public class PoderService {
             partida.empatePendenteDe = null;
         }
 
-        // Queimar e Congelar gastam a vez: o relógio passa para quem joga agora. A Peça Extra não.
-        if (poder != Poder.EXTRA) {
+        if (jogo.getStatus() != StatusJogo.EM_ANDAMENTO) {
+            // o Queimar formou um 4 em linha com a queda das peças: a partida termina (física pura)
+            jogadaService.finalizarPeloMotor(partida, jogo, jogador, agora);
+        } else if (poder != Poder.EXTRA) {
+            // Queimar e Congelar gastam a vez: o relógio passa para quem joga agora. A Peça Extra não.
             Jogador proximo = jogo.getTurno() == Disco.VERMELHO ? partida.jogadorUm : partida.jogadorDois;
             relogio.passar(partida, jogador, proximo, agora);
         }

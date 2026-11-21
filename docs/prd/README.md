@@ -43,3 +43,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0023](0023-compra-de-moedas-e-poderes-na-loja.md) | Compra simulada de moedas e poderes na loja | Implementado |
 | [0024](0024-relogio-por-jogador.md) | Relógio por jogador | Implementado |
 | [0025](0025-poderes-do-caos.md) | Poderes do modo Caos | Implementado |
+| [0026](0026-gravidade-do-queimar.md) | Gravidade depois do Queimar | Implementado |

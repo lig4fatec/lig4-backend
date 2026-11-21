@@ -52,6 +52,23 @@ public class Tabuleiro {
         grade[linha][coluna] = null;
     }
 
+    /**
+     * Faz as peças da coluna caírem para preencher os buracos (gravidade depois do Queimar):
+     * junta as peças que sobraram na base, na mesma ordem, e deixa o resto da coluna vazio.
+     */
+    public void compactarColuna(int coluna) {
+        Disco[] pilha = new Disco[LINHAS];
+        int n = 0;
+        for (int linha = 0; linha < LINHAS; linha++) {
+            if (grade[linha][coluna] != null) {
+                pilha[n++] = grade[linha][coluna];
+            }
+        }
+        for (int linha = 0; linha < LINHAS; linha++) {
+            grade[linha][coluna] = linha < n ? pilha[linha] : null;
+        }
+    }
+
     /** Casas vazias que ainda dá para alcançar: as das colunas que não estão cheias. */
     public int espacosLivres() {
         int livres = 0;

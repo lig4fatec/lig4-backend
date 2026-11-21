@@ -84,8 +84,10 @@ public class Jogo {
     }
 
     /**
-     * Queimar Peça: remove uma peça do adversário e gasta a vez. As peças de cima não descem
-     * (a gravidade vem em outro PRD), então a casa fica vazia e a próxima peça da coluna cai nela.
+     * Queimar Peça: remove uma peça do adversário e gasta a vez. As peças de cima descem para
+     * preencher o buraco (gravidade). Se a queda formar um 4 em linha, a partida termina ali:
+     * pela regra "física pura", vence a cor do 4 que se formar, mesmo que seja a do adversário de
+     * quem queimou; se os dois formarem, vence o adversário de quem queimou.
      */
     public void queimar(Disco quem, int coluna, int linha) {
         exigirInicioDeTurno(quem, Poder.QUEIMAR);
@@ -94,8 +96,52 @@ public class Jogo {
                     "Escolha uma peça do adversário.");
         }
         tabuleiro.remover(linha, coluna);
+        tabuleiro.compactarColuna(coluna);
         poderesUsados.get(quem).add(Poder.QUEIMAR);
+        if (resolverQueda(quem)) {
+            return; // a queda formou um 4 em linha e terminou a partida
+        }
         encerrarTurno(quem);
+    }
+
+    /**
+     * Confere o tabuleiro todo depois da queda do Queimar. Devolve true, e termina a partida, se
+     * alguma cor formou um 4 em linha. Física pura: vence a cor do 4; se as duas formarem, vence o
+     * adversário de quem queimou.
+     */
+    private boolean resolverQueda(Disco quemQueimou) {
+        List<Posicao> daVermelho = sequenciaDe(Disco.VERMELHO);
+        List<Posicao> daAmarelo = sequenciaDe(Disco.AMARELO);
+        boolean temVermelho = !daVermelho.isEmpty();
+        boolean temAmarelo = !daAmarelo.isEmpty();
+        if (!temVermelho && !temAmarelo) {
+            return false;
+        }
+        Disco venc;
+        if (temVermelho && temAmarelo) {
+            venc = quemQueimou.oposto();
+        } else {
+            venc = temVermelho ? Disco.VERMELHO : Disco.AMARELO;
+        }
+        status = StatusJogo.VENCEDOR;
+        vencedor = venc;
+        sequenciaVencedora = venc == Disco.VERMELHO ? daVermelho : daAmarelo;
+        return true;
+    }
+
+    /** Primeira sequência de 4 ou mais peças da cor no tabuleiro todo, ou lista vazia. */
+    private List<Posicao> sequenciaDe(Disco disco) {
+        for (int linha = 0; linha < Tabuleiro.LINHAS; linha++) {
+            for (int coluna = 0; coluna < Tabuleiro.COLUNAS; coluna++) {
+                if (tabuleiro.get(linha, coluna) == disco) {
+                    List<Posicao> sequencia = buscarSequencia(linha, coluna, disco);
+                    if (!sequencia.isEmpty()) {
+                        return sequencia;
+                    }
+                }
+            }
+        }
+        return List.of();
     }
 
     /** Congelar Coluna: o adversário não joga nela nas próximas 3 vezes dele. Gasta a vez. */
