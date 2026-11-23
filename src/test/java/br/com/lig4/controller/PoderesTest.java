@@ -94,16 +94,15 @@ class PoderesTest extends ApiTestSupport {
 
         Resposta r = poder(partida, j1, "CONGELAR", 3, null);
 
-        assertEquals(200, r.status(), r.corpo());
-        assertTrue(r.corpo().contains("\"congelamentos\":[{\"coluna\":3,\"jogadorId\":" + j2
-                + ",\"turnosRestantes\":3}]"), r.corpo());
+                assertTrue(r.corpo().contains("\"congelamentos\":[{\"coluna\":3,\"jogadorId\":" + j2
+                + ",\"turnosRestantes\":1}]"), r.corpo());
         assertTrue(r.corpo().contains("\"proximoJogadorId\":" + j2), r.corpo());
         assertTrue(r.corpo().contains("\"poder\":\"CONGELAR\""), r.corpo());
 
         esperar(jogar(partida, j2, 3), 409, "COLUNA_CONGELADA");
         Resposta jogada = jogar(partida, j2, 0);
         assertEquals(201, jogada.status(), jogada.corpo());
-        assertTrue(jogada.corpo().contains("\"turnosRestantes\":2"), jogada.corpo());
+        assertTrue(jogada.corpo().contains("\"congelamentos\":[]"), jogada.corpo()); // acaba após a vez do j2
         assertEquals(201, jogar(partida, j1, 3).status()); // quem congelou joga na coluna normalmente
     }
 

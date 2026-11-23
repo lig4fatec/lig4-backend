@@ -16,8 +16,8 @@ public class Jogo {
 
     private static final int[][] DIRECOES = {{0, 1}, {1, 0}, {1, 1}, {1, -1}};
     private static final int SEQUENCIA = 4;
-    /** Quantas vezes do adversário uma coluna congelada fica bloqueada. */
-    public static final int TURNOS_DE_CONGELAMENTO = 3;
+    /** Congelar Coluna: o adversário não joga nela na próxima vez dele. Gasta a vez. */
+    public static final int TURNOS_DE_CONGELAMENTO = 1;
 
     private final Tabuleiro tabuleiro = new Tabuleiro();
     private final List<Jogada> historico = new ArrayList<>();

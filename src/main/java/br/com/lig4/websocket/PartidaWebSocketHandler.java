@@ -1,5 +1,6 @@
 package br.com.lig4.websocket;
 
+import br.com.lig4.dto.EmoteDTO;
 import br.com.lig4.dto.JogadaRequestDTO;
 import br.com.lig4.dto.JogadaResponseDTO;
 import br.com.lig4.dto.PartidaEstadoDTO;
@@ -10,6 +11,7 @@ import br.com.lig4.exception.CodigoErro;
 import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.exception.PartidaInvalidaException;
 import br.com.lig4.exception.PartidaNotFoundException;
+import br.com.lig4.service.EmoteService;
 import br.com.lig4.service.JogadaService;
 import br.com.lig4.service.PartidaAcaoService;
 import br.com.lig4.service.PoderService;
@@ -43,7 +45,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     private static final String ATTR_JOGADOR = "jogadorId";
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    record Comando(String tipo, Integer coluna, Integer linha, String poder) {
+    record Comando(String tipo, Integer coluna, Integer linha, String poder, String emote) {
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -56,14 +58,16 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     private final JogadaService jogadaService;
     private final PartidaAcaoService acaoService;
     private final PoderService poderService;
+    private final EmoteService emoteService;
     private final ObjectMapper mapper;
     private final Map<Long, Set<WebSocketSession>> salas = new ConcurrentHashMap<>();
 
     public PartidaWebSocketHandler(JogadaService jogadaService, PartidaAcaoService acaoService,
-                                   PoderService poderService, ObjectMapper mapper) {
+                                   PoderService poderService, EmoteService emoteService, ObjectMapper mapper) {
         this.jogadaService = jogadaService;
         this.acaoService = acaoService;
         this.poderService = poderService;
+        this.emoteService = emoteService;
         this.mapper = mapper;
     }
 
@@ -124,6 +128,14 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
                     transmitirEstado(partidaId, acaoService.desistir(partidaId, jogadorId));
                     log.info("Desistência: partida={} jogador={}", partidaId, jogadorId);
                 }
+                case "EMOTE" -> {
+                    if (comando.emote() == null) {
+                        throw new PartidaInvalidaException("Informe o emote.");
+                    }
+                    EmoteDTO emote = emoteService.validar(partidaId, jogadorId, comando.emote());
+                    transmitirEmote(partidaId, emote);
+                    log.info("Emote: partida={} jogador={} emote={}", partidaId, jogadorId, comando.emote());
+                }
                 case "PROPOR_EMPATE" -> {
                     transmitirEstado(partidaId, acaoService.proporEmpate(partidaId, jogadorId));
                     log.info("Empate proposto: partida={} jogador={}", partidaId, jogadorId);
@@ -141,6 +153,7 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
                 default -> throw new PartidaInvalidaException(
                         "Tipo de mensagem desconhecido: " + comando.tipo());
             }
+            
         } catch (RuntimeException e) {
             log.warn("Mensagem recusada: partida={} jogador={} motivo={}", partidaId, jogadorId, e.getMessage());
             enviar(session, erro(e));
@@ -199,6 +212,11 @@ public class PartidaWebSocketHandler extends TextWebSocketHandler {
     /** Envia o estado da partida aos dois jogadores conectados (também usado pelos endpoints HTTP). */
     public void transmitirEstado(Long partidaId, PartidaEstadoDTO estado) {
         transmitir(partidaId, new Mensagem("ESTADO", estado, null));
+    }
+
+    /** Transmite um emote aos dois jogadores conectados (também usado pelo endpoint HTTP). */
+    public void transmitirEmote(Long partidaId, EmoteDTO emote) {
+        transmitir(partidaId, new Mensagem("EMOTE", emote, null));
     }
 
     private void transmitir(Long partidaId, Mensagem mensagem) {

@@ -51,7 +51,9 @@ public enum CodigoErro {
     PODER_JA_USADO,
     PODER_FORA_DE_HORA,
     ALVO_INVALIDO,
-    PECA_EXTRA_SEM_ESPACO;
+    PECA_EXTRA_SEM_ESPACO,
+    // emotes da partida
+    EMOTE_INVALIDO;
 
     public static CodigoErro de(RuntimeException e) {
         if (e instanceof JogadorNotFoundException) {

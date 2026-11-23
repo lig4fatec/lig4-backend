@@ -47,3 +47,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0027](0027-catalogo-alinhado-ao-front.md) | Catálogo da loja alinhado ao front | Implementado |
 | [0028](0028-historico-por-modo-de-jogo.md) | Histórico por modo de jogo | Implementado |
 | [0029](0029-apelido-no-cadastro.md) | Apelido no cadastro | Implementado |
+| [0034](0034-emotes-e-ajuste-do-congelamento.md) | Emotes na partida e ajuste do congelamento | Implementado |

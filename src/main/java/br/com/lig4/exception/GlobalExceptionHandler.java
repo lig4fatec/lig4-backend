@@ -52,7 +52,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AcaoPartidaInvalidaException.class)
     public ResponseEntity<ErroResponse> acaoInvalida(AcaoPartidaInvalidaException e) {
-        HttpStatus status = e.codigo() == CodigoErro.PODER_INVALIDO ? HttpStatus.BAD_REQUEST : HttpStatus.CONFLICT;
+            HttpStatus status = e.codigo() == CodigoErro.PODER_INVALIDO || e.codigo() == CodigoErro.EMOTE_INVALIDO
+            ? HttpStatus.BAD_REQUEST : HttpStatus.CONFLICT;
         return resposta(status, e.codigo(), e.getMessage());
     }
 
