@@ -27,40 +27,28 @@ class JogoPoderesTest {
     // Congelar Coluna
 
     @Test
-    void congelarBloqueiaAColunaPorTresVezesDoAdversario() {
+    void congelarBloqueiaAColunaPorUmaVezDoAdversario() {
         Jogo jogo = new Jogo(VERMELHO);
         jogo.congelar(VERMELHO, 3);
         assertEquals(AMARELO, jogo.getTurno());
 
-        for (int vez = 1; vez <= 3; vez++) {
-            assertEquals(Motivo.COLUNA_CONGELADA, motivo(() -> jogo.jogar(AMARELO, 3)));
-            jogo.jogar(AMARELO, 0);
-            if (vez < 3) {
-                jogo.jogar(VERMELHO, 1);
-            }
-        }
+        assertEquals(Motivo.COLUNA_CONGELADA, motivo(() -> jogo.jogar(AMARELO, 3))); // bloqueado na vez dele
+        jogo.jogar(AMARELO, 0); // joga em outra coluna; a vez conta e o congelamento acaba
         assertTrue(jogo.getCongelamentos().isEmpty());
+
         jogo.jogar(VERMELHO, 1);
-        jogo.jogar(AMARELO, 3); // descongelou
+        jogo.jogar(AMARELO, 3); // agora já pode
         assertEquals(AMARELO, jogo.getTabuleiro().get(0, 3));
     }
 
-    @Test
-    void congelarNaoAfetaQuemCongelou() {
-        Jogo jogo = new Jogo(VERMELHO);
-        jogo.congelar(VERMELHO, 3);
-        jogo.jogar(AMARELO, 0);
-        jogo.jogar(VERMELHO, 3);
-        assertEquals(VERMELHO, jogo.getTabuleiro().get(0, 3));
-    }
 
     @Test
     void congelarMostraQuantasVezesFaltam() {
         Jogo jogo = new Jogo(VERMELHO);
         jogo.congelar(VERMELHO, 5);
-        assertEquals(new Congelamento(5, AMARELO, 3), jogo.getCongelamentos().get(0));
-        jogo.jogar(AMARELO, 0);
-        assertEquals(2, jogo.getCongelamentos().get(0).turnosRestantes());
+        assertEquals(new Congelamento(5, AMARELO, 1), jogo.getCongelamentos().get(0));
+        jogo.jogar(AMARELO, 0); // uma vez do adversário já basta para acabar
+        assertTrue(jogo.getCongelamentos().isEmpty());
     }
 
     @Test

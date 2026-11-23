@@ -249,4 +249,26 @@ class PartidaWebSocketTest {
         s1.close();
         s2.close();
     }
+
+    @Test
+    void emoteChegaParaOsDoisJogadores() throws Exception {
+        long j1 = novoJogador("WsEmoteA");
+        long j2 = novoJogador("WsEmoteB");
+        long partida = novaPartida(j1, j2);
+        Cliente c1 = new Cliente();
+        Cliente c2 = new Cliente();
+        WebSocketSession s1 = conectar(partida, j1, c1);
+        WebSocketSession s2 = conectar(partida, j2, c2);
+        c1.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+        c2.esperar("\"conectados\":[" + j1 + "," + j2 + "]");
+
+        s1.sendMessage(new TextMessage("{\"tipo\":\"EMOTE\",\"emote\":\"emote-risadinha\"}"));
+
+        String para1 = c1.esperar("\"tipo\":\"EMOTE\"");
+        String para2 = c2.esperar("\"tipo\":\"EMOTE\"");
+        assertTrue(para1.contains("\"emote\":\"emote-risadinha\""), para1);
+        assertTrue(para2.contains("\"jogadorId\":" + j1), para2);
+        s1.close();
+        s2.close();
+    }
 }

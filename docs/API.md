@@ -67,6 +67,7 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 | `POST /partidas/{id}/jogadas` | `{jogadorId, coluna (0 a 6)}` | 201, jogada com o tabuleiro novo, `relogioDe`, os tempos, `congelamentos` e `pecaExtraAtiva` |
 | `GET /partidas/{id}/jogadas` | | jogadas em ordem, cada uma com `tipo` (`PECA`, `QUEIMAR`, `CONGELAR` ou `EXTRA`) |
 | `POST /partidas/{id}/poderes` | `{jogadorId, poder (QUEIMAR, CONGELAR ou EXTRA), coluna, linha}` | estado (usa um poder do Caos) |
+| `POST /partidas/{id}/emotes` | `{jogadorId, emote}` | 200, o emote (transmitido aos dois pelo WebSocket) |
 | `POST /partidas/{id}/desistir` | `{jogadorId}` | estado (o adversário vence) |
 | `POST /partidas/{id}/empate` | `{jogadorId}` | estado (propõe empate) |
 | `POST /partidas/{id}/empate/aceitar` | `{jogadorId}` | estado (partida empatada) |
@@ -85,11 +86,13 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 **Poderes do Caos:** só existem no modo Caos e precisam ter sido comprados na loja (`queimar-peca, congelar-coluna, peca-extra`). Cada jogador usa cada poder **uma vez por partida**, só na sua vez e **antes de soltar peça** nessa vez. O estado traz `poderesUsados` e `poderesDisponiveis` (lista de `{jogadorId, poder}`; os disponíveis são os comprados e ainda não usados, e vêm vazios no Clássico e depois do fim), `congelamentos` (lista de `{coluna, jogadorId, turnosRestantes}`) e `pecaExtraAtiva`.
 
 - `QUEIMAR`: informe `coluna` e `linha` (linha 0 é a **base** da coluna, a mesma numeração de `linha` nas jogadas) de uma peça do **adversário**. A peça some, as peças de cima descem para preencher o buraco (gravidade) e a vez passa ao adversário. Se a queda formar um 4 em linha, a partida termina ali (regra "física pura"): vence a cor do 4, **mesmo que seja a do adversário de quem queimou** (`motivoFim` `VITORIA`, moedas pagas como numa vitória); se as duas cores formarem um 4, vence o adversário de quem queimou. Alvo vazio, peça própria ou fora do tabuleiro devolve `ALVO_INVALIDO` (por isso não funciona antes de existir peça do adversário).
-- `CONGELAR`: informe a `coluna`. O adversário não pode jogar nela nas **próximas 3 vezes dele**, e a vez passa a ele. Coluna cheia devolve `COLUNA_CHEIA`. Jogar numa coluna congelada devolve `COLUNA_CONGELADA`. Se o adversário só tiver colunas congeladas para jogar, ele perde a vez (conta como uma das 3).
+- `CONGELAR`: informe a `coluna`. O adversário não pode jogar nela na **próxima vez dele**, e a vez passa a ele. Coluna cheia devolve `COLUNA_CHEIA`. Jogar numa coluna congelada devolve `COLUNA_CONGELADA`. Se o adversário só tiver colunas congeladas para jogar, ele perde essa vez.
 - `EXTRA` (o "Jogar 2x" do front): sem alvo. Não gasta a vez: `pecaExtraAtiva` fica `true`, o mesmo jogador joga duas peças seguidas e depois a vez passa. Não vale com menos de 2 casas livres (`PECA_EXTRA_SEM_ESPACO`). Se a primeira peça já ganha ou enche o tabuleiro, a partida termina ali.
 - Usar poder depois de receber uma proposta de empate vale como recusá-la, como jogar. O relógio do jogador continua correndo enquanto ele usa o poder.
 - Erros: `PODER_INVALIDO` (400, poder desconhecido ou alvo faltando), `MODO_SEM_PODERES`, `PODER_NAO_POSSUIDO`, `PODER_JA_USADO`, `PODER_FORA_DE_HORA`, `ALVO_INVALIDO`, `COLUNA_CONGELADA`, `PECA_EXTRA_SEM_ESPACO` (409), além de `FORA_DO_TURNO` e `JOGO_ENCERRADO`.
 - `totalJogadas` e o histórico do perfil contam só as peças soltas, não os poderes. Em `GET /partidas/{id}/jogadas`, nos poderes `coluna` e `linha` guardam o alvo (`CONGELAR` só tem coluna; `EXTRA` vem com 0 e 0) e `numero` conta peças e poderes juntos.
+
+**Emotes:** durante a partida, qualquer participante pode mandar um emote (pelo comando `EMOTE` do WebSocket ou por `POST /partidas/{id}/emotes`). O `emote` é o id de um item da categoria `emote` da loja; o servidor transmite `{"tipo":"EMOTE","dados":{"jogadorId","emote"}}` aos dois jogadores. É só visual (não custa nem exige ter comprado o emote). Emote que não existe, ou que não é da categoria `emote`, devolve `EMOTE_INVALIDO`.
 
 Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP fazem o mesmo e também avisam quem está conectado.
 
@@ -107,6 +110,8 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 | Servidor → os dois | `{"tipo":"JOGADA","dados":{...jogada...}}` |
 | Servidor → quem errou | `{"tipo":"ERRO","codigo":"...","mensagem":"..."}` |
 | Servidor → os conectados, ao conectar ou desconectar alguém | `{"tipo":"PRESENCA","dados":{"conectados":[12,15]}}` |
+| Cliente → servidor | `{"tipo":"EMOTE","emote":"emote-risadinha"}` |
+| Servidor → os dois, quando alguém manda um emote | `{"tipo":"EMOTE","dados":{"jogadorId":12,"emote":"emote-risadinha"}}` |
 
 ## Códigos de erro
 
