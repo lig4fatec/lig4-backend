@@ -26,7 +26,7 @@ class AvatarTest extends ApiTestSupport {
         Resposta r = enviar("POST", "/salas",
                 "{\"jogadorId\":%d,\"modo\":\"CLASSICO\",\"cor\":\"blue\"}".formatted(dono));
 
-        assertEquals(200, r.status(), r.corpo());
+        assertEquals(201, r.status(), r.corpo());
         assertTrue(r.corpo().contains("\"avatar\":\"avatar-padrao\""), r.corpo());
     }
 
