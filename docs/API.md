@@ -28,12 +28,8 @@ Base local: `http://localhost:8080`. A API também está descrita no Swagger (`/
 | `POST /jogadores/{id}/loja/comprar` | `{itemId}` | loja atualizada |
 | `POST /jogadores/{id}/loja/moedas` | `{pacoteId}` | loja atualizada (compra simulada de moedas) |
 | `PUT /jogadores/{id}/loja/equipar` | `{categoria, itemId}` | loja atualizada |
-| `PUT /jogadores/{id}/senha` | `{senhaAtual, senhaNova (6 a 72)}` | 204; `401 CREDENCIAIS_INVALIDAS` se a senha atual não confere |
-| `PUT /jogadores/{id}/email` | `{email, senha}` | jogador atualizado; `401` se a senha não confere; `409 EMAIL_JA_CADASTRADO` se o e-mail já é de outro |
 
 Também existem `GET /jogadores`, `POST /jogadores`, `PUT /jogadores/{id}`, `DELETE /jogadores/{id}` e `PUT /jogadores/{id}/cor` (cor em `#RRGGBB`, formato antigo; o front usa o perfil).
-
-**Trocar senha e e-mail:** as duas confirmam a senha antes de gravar. `PUT /jogadores/{id}/senha` troca a senha (precisa da `senhaAtual`); `PUT /jogadores/{id}/email` troca o e-mail (precisa da `senha`). Senha errada devolve `401 CREDENCIAIS_INVALIDAS` (a mesma resposta do login). O perfil (`PUT .../perfil`) não mexe em e-mail nem senha.
 
 **Categorias da loja:** `avatar`, `board`, `emote` e `poderes`. Os ids e nomes dos itens são os mesmos do front (avatares `avatar-padrao`/`-samurai`/`-robo`/`-rei`/`-rainha`/`-mago`, tabuleiros `board-classico`/`-espacial`/`-floresta`/`-medieval`/`-praia`/`-inverno`, emotes `emote-risadinha`/`-aplauso`/`-choro`/`-surpresa`/`-bravo`/`-cool`/`-coracao`/`-confuso`). Os poderes (`congelar-coluna` "Congelar Coluna", `queimar-peca` "Queimar Peça" e `peca-extra` "Peça Extra") custam 100 moedas cada, são comprados uma vez e ficam para sempre. Eles não se equipam (`PUT .../equipar` devolve `ITEM_INEXISTENTE`) e só são usados no modo Caos.
 
@@ -53,7 +49,7 @@ Moedas: cada jogador começa com 500. Ao fim de cada partida: no Clássico, vit�
 | `POST /salas/{pin}/revanche` | `{jogadorId}` | sala |
 | `POST /salas/{pin}/sair` | `{jogadorId}` | 204 |
 
-Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, prontoDono, prontoConvidado}`.
+Sala: `{pin, modo, fase, dono:{jogadorId,nome,cor,avatar}, convidado, partidaId, revancheDe, prontoDono, prontoConvidado}` (o `convidado` tem o mesmo formato do `dono`).
 
 - `fase`: `AGUARDANDO`, `JOGANDO` ou `ENCERRADA`.
 - A partida só começa quando o dono e o convidado marcam "pronto" (`PUT /salas/{pin}/pronto`): quando o segundo marca, o back cria a partida sozinho, a sala vira `JOGANDO` e `partidaId` vem preenchido. Não existe mais `POST /salas/{pin}/iniciar`.
@@ -78,6 +74,8 @@ Sala: `{pin, modo, fase, dono:{id,nome,cor}, convidado, partidaId, revancheDe, p
 | `POST /partidas/{id}/empate/recusar` | `{jogadorId}` | estado (a partida continua) |
 
 `pin` só vem quando a partida nasceu de uma sala. `POST /partidas` aceita `modo` (`CLASSICO` por padrão). Também existem `GET/POST /partidas`, `GET /partidas/{id}`, `PUT /partidas/{id}` (finalizar) e `DELETE /partidas/{id}`.
+
+Em `jogadorUm` e `jogadorDois` (no estado da partida) e em `dono`/`convidado` (na sala), cada jogador vem com `nome` (o apelido), `cor` e `avatar` (o id do avatar equipado), para o front mostrar o avatar e o nick do adversário.
 
 **Como a partida terminou (`motivoFim`):** nulo enquanto está em andamento; depois `VITORIA` (quatro peças), `TABULEIRO_CHEIO` (empate sem vencedor), `DESISTENCIA`, `EMPATE_ACORDADO` ou `TEMPO` (o tempo de um jogador acabou).
 

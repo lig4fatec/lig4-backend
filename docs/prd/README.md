@@ -53,3 +53,4 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0033](0033-maven-wrapper-quebra-de-linha.md) | Build do Docker: quebra de linha no maven-wrapper e .gitattributes | Implementado |
 | [0034](0034-emotes-e-ajuste-do-congelamento.md) | Emotes na partida e ajuste do congelamento | Implementado |
 | [0035](0035-trocar-senha-e-email.md) | Trocar senha e e-mail | Implementado |
+| [0036](0036-avatar-do-jogador-na-sala-e-partida.md) | Avatar do jogador na sala e na partida | Implementado |

@@ -22,9 +22,10 @@ public record SalaResponseDTO(
         boolean prontoConvidado
 ) {
     public static SalaResponseDTO from(Sala sala) {
-        SalaJogadorDTO dono = new SalaJogadorDTO(sala.dono.id, sala.dono.nome, sala.corDono);
+        SalaJogadorDTO dono = new SalaJogadorDTO(sala.dono.id, sala.dono.nome, sala.corDono, sala.dono.avatarEquipado);
         SalaJogadorDTO convidado = sala.convidado == null ? null
-                : new SalaJogadorDTO(sala.convidado.id, sala.convidado.nome, sala.corConvidado);
+                : new SalaJogadorDTO(sala.convidado.id, sala.convidado.nome, sala.corConvidado,
+                        sala.convidado.avatarEquipado);
         Long partidaId = sala.partida == null ? null : sala.partida.id;
 
         List<Long> revancheDe = new ArrayList<>();
