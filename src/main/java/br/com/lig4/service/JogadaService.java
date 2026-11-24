@@ -297,11 +297,11 @@ public class JogadaService {
     }
 
     private JogadorResumoDTO resumoDe(Jogador jogador, Sala sala) {
-        if (sala == null) {
-            return JogadorResumoDTO.from(jogador);
-        }
-        String cor = jogador.id.equals(sala.dono.id) ? sala.corDono : sala.corConvidado;
-        return new JogadorResumoDTO(jogador.id, jogador.nome, cor);
+    if (sala == null) {
+        return JogadorResumoDTO.from(jogador);
+    }
+    String cor = jogador.id.equals(sala.dono.id) ? sala.corDono : sala.corConvidado;
+    return new JogadorResumoDTO(jogador.id, jogador.nome, cor, jogador.avatarEquipado);
     }
 
         /**
