@@ -23,6 +23,8 @@ Base local: `http://localhost:8080`. A API também está descrita no Swagger (`/
 | `GET /jogadores/{id}` | | jogador `{id, nome, email, criadoEm, cor}` |
 | `GET /jogadores/{id}/perfil` | | `{id, email, nick, nomeCompleto, bio, cor, vitorias, derrotas, moedas}` |
 | `PUT /jogadores/{id}/perfil` | `{nick (até 20), nomeCompleto (até 100), bio (até 280), cor}` | perfil atualizado |
+| `PUT /jogadores/{id}/senha` | `{senhaAtual, senhaNova (6 a 72)}` | 204; `CREDENCIAIS_INVALIDAS` se a senha atual não bate |
+| `PUT /jogadores/{id}/email` | `{email, senha}` | jogador atualizado; `EMAIL_JA_CADASTRADO` se o e-mail já é de outro jogador |
 | `GET /jogadores/{id}/historico?filtro=todos\|classico\|caos` | | `{partidas:[{id, data, adversario, resultado, jogadas, modo}]}`; `resultado` é `VITORIA`, `DERROTA` ou `EMPATE`; `modo` é `CLASSICO` ou `CAOS` |
 | `GET /jogadores/{id}/loja` | | `{moedas, equipados:{avatar,board,emote}, categorias:[{id, nome, itens:[{id, nome, preco, possuido, equipado}]}], pacotes:[{id, moedas, precoReais}]}` |
 | `POST /jogadores/{id}/loja/comprar` | `{itemId}` | loja atualizada |
@@ -129,6 +131,6 @@ Durante a partida o front usa os comandos do WebSocket abaixo; os endpoints HTTP
 ## Limitações conhecidas
 
 - Não há token: qualquer cliente pode enviar o `jogadorId` de outro jogador.
-- Partida abandonada (sem relógio, criada antes do relógio) não é finalizada e não conta nas estatísticas nem dá moedas. - -  -Partidas novas terminam sozinhas por tempo.
+- Partida abandonada (sem relógio, criada antes do relógio) não é finalizada e não conta nas estatísticas nem dá moedas; partidas novas terminam sozinhas por tempo.
 - A sala é consultada por polling; o WebSocket existe só para a partida.
 - O histórico filtra só por modo de jogo (`classico`/`caos`); não há desafio diário no back-end (`filtro=diario` devolve `FILTRO_INVALIDO`).
