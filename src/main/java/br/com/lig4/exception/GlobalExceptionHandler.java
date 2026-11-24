@@ -104,9 +104,11 @@ public class GlobalExceptionHandler {
         if (erros.stream().anyMatch(erro -> "email".equals(erro.getField()))) {
             return CodigoErro.EMAIL_INVALIDO;
         }
-        if (erros.stream().anyMatch(erro -> "senha".equals(erro.getField()))) {
+        
+        if (erros.stream().anyMatch(erro -> erro.getField().startsWith("senha"))) {
             return CodigoErro.SENHA_INVALIDA;
         }
+        
         return CodigoErro.DADOS_INVALIDOS;
     }
 

@@ -4,8 +4,11 @@ import br.com.lig4.domain.Jogador;
 import br.com.lig4.dto.CadastroRequestDTO;
 import br.com.lig4.dto.JogadorResponseDTO;
 import br.com.lig4.dto.LoginRequestDTO;
+import br.com.lig4.dto.TrocarEmailRequestDTO;
+import br.com.lig4.dto.TrocarSenhaRequestDTO;
 import br.com.lig4.exception.CredenciaisInvalidasException;
 import br.com.lig4.exception.EmailJaCadastradoException;
+import br.com.lig4.exception.JogadorNotFoundException;
 import br.com.lig4.repository.JogadorRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -70,5 +73,34 @@ public class AuthService {
             return nick.trim();
         }
         return nomeInicial(email);
+    }
+
+        /** Troca a senha, conferindo a senha atual. Mesma resposta de login para senha errada. */
+    @Transactional
+    public void trocarSenha(Long jogadorId, TrocarSenhaRequestDTO dto) {
+        Jogador jogador = repository.findById(jogadorId)
+                .orElseThrow(() -> new JogadorNotFoundException(jogadorId));
+        if (jogador.senhaHash == null || !encoder.matches(dto.senhaAtual(), jogador.senhaHash)) {
+            throw new CredenciaisInvalidasException();
+        }
+        jogador.senhaHash = encoder.encode(dto.senhaNova());
+    }
+
+    /** Troca o e-mail, conferindo a senha e garantindo que o novo e-mail não está em uso por outro jogador. */
+    @Transactional
+    public JogadorResponseDTO trocarEmail(Long jogadorId, TrocarEmailRequestDTO dto) {
+        Jogador jogador = repository.findById(jogadorId)
+                .orElseThrow(() -> new JogadorNotFoundException(jogadorId));
+        if (jogador.senhaHash == null || !encoder.matches(dto.senha(), jogador.senhaHash)) {
+            throw new CredenciaisInvalidasException();
+        }
+        String email = normalizar(dto.email());
+        repository.findByEmail(email)
+                .filter(outro -> !outro.id.equals(jogadorId))
+                .ifPresent(outro -> {
+                    throw new EmailJaCadastradoException(email);
+                });
+        jogador.email = email;
+        return JogadorResponseDTO.from(jogador);
     }
 }
