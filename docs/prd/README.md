@@ -47,4 +47,9 @@ PRDs registram os requisitos do produto e são a fonte dos identificadores usado
 | [0027](0027-catalogo-alinhado-ao-front.md) | Catálogo da loja alinhado ao front | Implementado |
 | [0028](0028-historico-por-modo-de-jogo.md) | Histórico por modo de jogo | Implementado |
 | [0029](0029-apelido-no-cadastro.md) | Apelido no cadastro | Implementado |
+| [0030](0030-config-banco-por-variavel.md) | Configuração do banco por variável de ambiente | Implementado |
+| [0031](0031-maven-wrapper-sem-sha.md) | Maven Wrapper sem o checksum inválido | Implementado |
+| [0032](0032-build-docker-simplificado.md) | Build do Docker simplificado | Implementado |
+| [0033](0033-maven-wrapper-quebra-de-linha.md) | Build do Docker: quebra de linha no maven-wrapper e .gitattributes | Implementado |
 | [0034](0034-emotes-e-ajuste-do-congelamento.md) | Emotes na partida e ajuste do congelamento | Implementado |
+| [0035](0035-trocar-senha-e-email.md) | Trocar senha e e-mail | Implementado |

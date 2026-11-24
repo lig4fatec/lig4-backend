@@ -28,8 +28,12 @@ Base local: `http://localhost:8080`. A API também está descrita no Swagger (`/
 | `POST /jogadores/{id}/loja/comprar` | `{itemId}` | loja atualizada |
 | `POST /jogadores/{id}/loja/moedas` | `{pacoteId}` | loja atualizada (compra simulada de moedas) |
 | `PUT /jogadores/{id}/loja/equipar` | `{categoria, itemId}` | loja atualizada |
+| `PUT /jogadores/{id}/senha` | `{senhaAtual, senhaNova (6 a 72)}` | 204; `401 CREDENCIAIS_INVALIDAS` se a senha atual não confere |
+| `PUT /jogadores/{id}/email` | `{email, senha}` | jogador atualizado; `401` se a senha não confere; `409 EMAIL_JA_CADASTRADO` se o e-mail já é de outro |
 
 Também existem `GET /jogadores`, `POST /jogadores`, `PUT /jogadores/{id}`, `DELETE /jogadores/{id}` e `PUT /jogadores/{id}/cor` (cor em `#RRGGBB`, formato antigo; o front usa o perfil).
+
+**Trocar senha e e-mail:** as duas confirmam a senha antes de gravar. `PUT /jogadores/{id}/senha` troca a senha (precisa da `senhaAtual`); `PUT /jogadores/{id}/email` troca o e-mail (precisa da `senha`). Senha errada devolve `401 CREDENCIAIS_INVALIDAS` (a mesma resposta do login). O perfil (`PUT .../perfil`) não mexe em e-mail nem senha.
 
 **Categorias da loja:** `avatar`, `board`, `emote` e `poderes`. Os ids e nomes dos itens são os mesmos do front (avatares `avatar-padrao`/`-samurai`/`-robo`/`-rei`/`-rainha`/`-mago`, tabuleiros `board-classico`/`-espacial`/`-floresta`/`-medieval`/`-praia`/`-inverno`, emotes `emote-risadinha`/`-aplauso`/`-choro`/`-surpresa`/`-bravo`/`-cool`/`-coracao`/`-confuso`). Os poderes (`congelar-coluna` "Congelar Coluna", `queimar-peca` "Queimar Peça" e `peca-extra` "Peça Extra") custam 100 moedas cada, são comprados uma vez e ficam para sempre. Eles não se equipam (`PUT .../equipar` devolve `ITEM_INEXISTENTE`) e só são usados no modo Caos.
 

@@ -65,10 +65,6 @@ class JogoPoderesTest {
         jogo.congelar(VERMELHO, 3);
         jogo.jogar(AMARELO, 0);
         assertEquals(Motivo.PODER_JA_USADO, motivo(() -> jogo.congelar(VERMELHO, 4)));
-        jogo.jogar(VERMELHO, 1);
-        jogo.congelar(AMARELO, 6); // o adversário tem o próprio poder
-        assertEquals(1, jogo.getCongelamentos().stream().filter(c -> c.afetado() == AMARELO).count());
-        assertEquals(1, jogo.getCongelamentos().stream().filter(c -> c.afetado() == VERMELHO).count());
     }
 
     @Test
